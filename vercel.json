@@ -1,5 +1,11 @@
 {
-  "buildCommand": "echo 'Build completed'",
-  "outputDirectory": "public",
-  "framework": "static"
+  "outputDirectory": ".",
+  "functions": {
+    "api/placas.js": {
+      "runtime": "nodejs18.x"
+    },
+    "api/pix.js": {
+      "runtime": "nodejs18.x"
+    }
+  }
 }
