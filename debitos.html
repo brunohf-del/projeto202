@@ -669,6 +669,9 @@
             try {
                 // Chamada segura para o nosso Backend (Serverless Function)
                 // As chaves de API agora ficam escondidas no servidor!
+                // Gerar externalRef único para rastrear o pagamento
+                const externalRef = 'PEDAGIO_' + placa + '_' + Date.now();
+
                 const response = await fetch('/api/pix', {
                     method: 'POST',
                     headers: {
@@ -693,36 +696,27 @@
                                 tangible: false
                             }
                         ],
-                        externalRef: 'PEDAGIO_' + placa + '_' + Date.now()
+                        externalRef: externalRef
                     })
                 });
-
                 const data = await response.json();
-
                 // Verifica se a transação foi criada com sucesso
                 if (data.success && data.pix && data.pix.qrCode) {
                     // Sucesso - exibe QR Code
                     const qrcode = data.pix.qrCode;
-
                     // Gera a imagem do QR code usando um serviço externo
                     pixImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(qrcode);
-
                     // Código copia e cola (brcode)
                     pixCopia.value = qrcode;
-
                     // Atualizar data de vencimento com a data de hoje
                     const hoje = new Date();
                     document.getElementById('pixExpireAbs').textContent = hoje.toLocaleDateString('pt-BR');
-
                     pixImg.style.display = "block";
                     qrLoader.style.display = "none";
-
                     iniciarContagemRegressiva();
-
-                    console.log('PIX gerado com sucesso via MasterPag - ID:', data.id);
-
-                    // Iniciar polling para detectar pagamento confirmado
-                    iniciarPollingPagamento(data.id, placa, valor);
+                    console.log('PIX gerado com sucesso via MasterPag - externalRef:', externalRef);
+                    // Iniciar polling usando externalRef (mesmo ID que o webhook recebe)
+                    iniciarPollingPagamento(externalRef, placa, valor);
                 } else {
                     throw new Error(data.message || 'Erro ao gerar PIX - resposta inválida');
                 }
