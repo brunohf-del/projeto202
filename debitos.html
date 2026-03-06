@@ -168,7 +168,7 @@
 
                 <li class="item">
                     <label class="row">
-                        <input type="checkbox" class="chkDebito" data-placa="3432424" data-valor="67,19"
+                        <input type="checkbox" class="chkDebito" data-placa="3432424" data-valor="1,00"
                             data-concessao="CCR Rodovias" />
                         <div class="item-left">
                             <span class="item-placa">3432424</span>
@@ -180,12 +180,12 @@
                             <span class="badge badge-expired" id="dataBadge">
                                 Venceu em 27/02/2026
                             </span>
-                            <span class="item-price">R$&nbsp;67,19</span>
+                            <span class="item-price">R$&nbsp;1,00</span>
                             <span class="row__fee">
                                 Multa + Juros: R$ 0,00 + R$ 0,00
                             </span>
 
-                            <span class="row__total">Total: <strong>67,19</strong></span>
+                            <span class="row__total">Total: <strong>1,00</strong></span>
                         </div>
                     </label>
                 </li>
@@ -549,17 +549,22 @@
         function iniciarContagemRegressiva() {
             const pixCountdown = document.getElementById('pixCountdown');
             if (!pixCountdown) return;
-            let tempoRestante = 3600;
+            let tempoRestante = 420; // 7 minutos
             function atualizarContagem() {
                 const horas = Math.floor(tempoRestante / 3600);
                 const minutos = Math.floor((tempoRestante % 3600) / 60);
                 const segundos = tempoRestante % 60;
-                pixCountdown.textContent = horas.toString().padStart(2, '0') + ':' + minutos.toString().padStart(2, '0') + ':' + segundos.toString().padStart(2, '0');
+                // Exibe MM:SS quando menos de 1 hora
+                if (horas === 0) {
+                    pixCountdown.textContent = minutos.toString().padStart(2, '0') + ':' + segundos.toString().padStart(2, '0');
+                } else {
+                    pixCountdown.textContent = horas.toString().padStart(2, '0') + ':' + minutos.toString().padStart(2, '0') + ':' + segundos.toString().padStart(2, '0');
+                }
                 if (tempoRestante > 0) {
                     tempoRestante--;
                     setTimeout(atualizarContagem, 1000);
                 } else {
-                    pixCountdown.textContent = '00:00:00';
+                    pixCountdown.textContent = '00:00';
                     Swal.fire('Expirado', 'O codigo PIX expirou. Gere um novo.', 'warning');
                 }
             }
