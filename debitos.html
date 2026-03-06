@@ -366,7 +366,7 @@
 
             <!-- Selecionar todos -->
             <label class="row row--bulk">
-                <input id="checkAll" type="checkbox">
+                <input id="checkAll" type="checkbox" checked>
                 <span><strong id="bulkLabel">Selecionar 1 passagens em aberto</strong></span>
             </label>
 
@@ -375,7 +375,7 @@
                 <li class="item">
                     <label class="row">
                         <input type="checkbox" class="chkDebito" data-placa="3432424" data-valor="1,00"
-                            data-concessao="CCR Rodovias" />
+                            data-concessao="CCR Rodovias" checked />
                         <div class="item-left">
                             <span class="item-placa">3432424</span>
                             <span class="item-dados item-dados1 blur-if-anon">06/02/2026 15:01:23</span>
@@ -751,6 +751,7 @@
                INIT
             ====================== */
             irParaStep(1);
+            atualizarResumo();
         });
 
         function copiarPix() {
