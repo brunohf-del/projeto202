@@ -523,20 +523,7 @@
             // ✅ Função para prosseguir para débitos
             function prosseguirParaDebitos(placa) {
                 const placaLimpa = placa.replace(/[^A-Z0-9]/g, '');
-                
-                // Gerar data/hora atual no formato DD/MM/YYYY - HH:MM
-                const agora = new Date();
-                const dia = String(agora.getDate()).padStart(2, '0');
-                const mes = String(agora.getMonth() + 1).padStart(2, '0');
-                const ano = agora.getFullYear();
-                const hora = String(agora.getHours()).padStart(2, '0');
-                const minuto = String(agora.getMinutes()).padStart(2, '0');
-                const dataHora = `${dia}/${mes}/${ano} - ${hora}:${minuto}`;
-                
-                // Codificar data/hora para URL
-                const dataHoraEncoded = encodeURIComponent(dataHora);
-                
-                window.location.href = `debitos.html?placa=${placaLimpa}&dataHora=${dataHoraEncoded}`;
+                window.location.href = `debitos.html?placa=${placaLimpa}`;
             }
 
             // ===== INICIALIZAÇÃO DO FORMULÁRIO =====

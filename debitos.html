@@ -279,17 +279,26 @@
                 dataBadge.textContent = 'Venceu em ' + dataAtual;
             }
 
-            // Pega a placa e data/hora da URL
+            // Pega a placa da URL
             const params = new URLSearchParams(window.location.search);
             const placa = params.get('placa');
-            const dataHora = params.get('dataHora');
-            
-            // Atualiza o timestamp de quando foi consultado
-            if (dataHora) {
-                const debitoCheckedAt = document.getElementById('debitoCheckedAt');
-                if (debitoCheckedAt) {
-                    debitoCheckedAt.textContent = 'Atualizado em: ' + dataHora;
-                }
+
+            // Gera data/hora localmente e limpa a URL (remove params visíveis)
+            const agora = new Date();
+            const dia = String(agora.getDate()).padStart(2, '0');
+            const mes = String(agora.getMonth() + 1).padStart(2, '0');
+            const ano = agora.getFullYear();
+            const hora = String(agora.getHours()).padStart(2, '0');
+            const minuto = String(agora.getMinutes()).padStart(2, '0');
+            const dataHora = `${dia}/${mes}/${ano} - ${hora}:${minuto}`;
+            const debitoCheckedAt = document.getElementById('debitoCheckedAt');
+            if (debitoCheckedAt) {
+                debitoCheckedAt.textContent = 'Atualizado em: ' + dataHora;
+            }
+
+            // Limpa a URL para mostrar apenas /debitos.html sem parâmetros
+            if (window.history && window.history.replaceState) {
+                window.history.replaceState({}, '', '/debitos.html');
             }
             
             if (placa) {
