@@ -514,16 +514,6 @@
                 <button type="button" id="btnCopyPix" class="btn-continue" onclick="copiarPix()">Copiar código
                     Pix</button>
             </div>
-            <div id="pixStatusBar" style="display:none; margin-top:12px; padding:10px 16px; background:#f0f9ff; border:1px solid #bae6fd; border-radius:10px; text-align:center;">
-                <span style="display:inline-block; width:10px; height:10px; background:#3b82f6; border-radius:50%; margin-right:8px; animation:pulseBlue 1.2s infinite;"></span>
-                <span style="color:#1d4ed8; font-size:13px; font-weight:500;">Verificando pagamento automaticamente...</span>
-            </div>
-            <style>
-                @keyframes pulseBlue {
-                    0%,100%{opacity:1;transform:scale(1)}
-                    50%{opacity:.4;transform:scale(1.4)}
-                }
-            </style>
             <p id="msgVerificando" style="text-align:center;color:#888;font-size:13px;margin-top:8px;display:none;"></p>
         </section>
         <br />
@@ -984,9 +974,6 @@
             let tentativas = 0;
             const maxTentativas = 84; // ~7 minutos (84 x 5s)
             if (_pollingIntervalo) clearInterval(_pollingIntervalo);
-            // Exibir barra de status de verificação automática
-            const pixStatusBar = document.getElementById('pixStatusBar');
-            if (pixStatusBar) pixStatusBar.style.display = 'block';
             _pollingIntervalo = setInterval(async () => {
                 tentativas++;
                 if (tentativas > maxTentativas) {
