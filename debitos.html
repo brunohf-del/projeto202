@@ -305,6 +305,22 @@
                 document.querySelectorAll('.item-placa').forEach(el => el.textContent = placaUpper);
                 document.querySelectorAll('.chkDebito').forEach(el => el.dataset.placa = placaUpper);
             }
+            // Garante que o total seja calculado após todos os listeners estarem prontos
+            setTimeout(function() {
+                const checks = document.querySelectorAll('.chkDebito:checked');
+                let tot = 0;
+                checks.forEach(function(chk) {
+                    tot += parseFloat((chk.dataset.valor || '0').replace(/\./g, '').replace(',', '.')) || 0;
+                });
+                const resumoTotalEl = document.getElementById('resumoTotal');
+                const pixTotalEl = document.getElementById('pixTotal');
+                if (resumoTotalEl && tot > 0) {
+                    resumoTotalEl.textContent = tot.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
+                }
+                if (pixTotalEl && tot > 0) {
+                    pixTotalEl.textContent = tot.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
+                }
+            }, 100);
         });
     </script>
 
