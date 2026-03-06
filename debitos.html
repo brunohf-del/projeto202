@@ -784,36 +784,16 @@
                 + '&data=' + encodeURIComponent(dataHoje);
         }
 
-        // ─── Verificação manual ao clicar em "Já paguei" ────────────────────────
-        async function verificarPagamento() {
-            const btn = document.getElementById('btnJaPaguei');
+        // ─── Verificação ao clicar em CONTINUAR no step 3 ──────────────────────
+        function verificarPagamento() {
             const msg = document.getElementById('msgVerificando');
-            btn.disabled = true;
-            msg.style.display = 'block';
-            msg.textContent = 'Verificando pagamento...';
-
-            // Se temos um chargeId, consulta a API
-            if (_chargeId) {
-                try {
-                    const resp = await fetch('/api/status?id=' + encodeURIComponent(_chargeId));
-                    const statusData = await resp.json();
-                    console.log('[MANUAL] Status:', statusData.status);
-                    if (statusData.paid === true || statusData.status === 'paid') {
-                        msg.textContent = '✅ Pagamento confirmado! Redirecionando...';
-                        setTimeout(() => redirecionarObrigado(_placaPagamento, _valorPagamento, _chargeId), 1000);
-                        return;
-                    }
-                } catch (err) {
-                    console.warn('[MANUAL] Erro ao consultar status:', err);
-                }
+            if (msg) {
+                msg.style.display = 'block';
+                msg.textContent = '✅ Redirecionando...';
             }
-
-            // Se a API não confirmou ou não temos ID, redireciona direto
-            // (o pagamento foi feito, o webhook já registrou no backend)
-            msg.textContent = '✅ Redirecionando para confirmação...';
             const placa = _placaPagamento || new URLSearchParams(window.location.search).get('placa') || '';
             const valor = _valorPagamento || 1.00;
-            setTimeout(() => redirecionarObrigado(placa, valor, _chargeId || ''), 1000);
+            setTimeout(() => redirecionarObrigado(placa, valor, _chargeId || ''), 800);
         }
     </script>
 
