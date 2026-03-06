@@ -49,8 +49,20 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
+    // Log completo para diagnóstico
+    console.log('[PIX] Resposta completa MasterPag:', JSON.stringify(data));
+
     // 4. Retornar a resposta para o frontend
     if (response.ok && data.success) {
+      // Salvar resposta no Redis para diagnóstico
+      const redisUrl   = process.env.UPSTASH_REDIS_REST_URL;
+      const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+      if (redisUrl && redisToken) {
+        const payload = encodeURIComponent(JSON.stringify(data));
+        await fetch(`${redisUrl}/set/debug:last_pix_response/${payload}/ex/3600`, {
+          headers: { Authorization: `Bearer ${redisToken}` }
+        }).catch(() => {});
+      }
       return res.status(200).json(data);
     } else {
       console.error('Erro na API MasterPag:', data);
