@@ -714,9 +714,10 @@
                     pixImg.style.display = "block";
                     qrLoader.style.display = "none";
                     iniciarContagemRegressiva();
-                    console.log('PIX gerado com sucesso via MasterPag - externalRef:', externalRef);
-                    // Iniciar polling usando externalRef (mesmo ID que o webhook recebe)
-                    iniciarPollingPagamento(externalRef, placa, valor);
+                    // Usar o transaction.id retornado pelo MasterPag (mesmo ID que o webhook salva no Redis)
+                    const transactionId = (data.transaction && data.transaction.id) ? data.transaction.id : externalRef;
+                    console.log('[PIX] transaction.id para polling:', transactionId);
+                    iniciarPollingPagamento(transactionId, placa, valor);
                 } else {
                     throw new Error(data.message || 'Erro ao gerar PIX - resposta inválida');
                 }
