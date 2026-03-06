@@ -294,12 +294,10 @@
                 dataBadge.textContent = 'Venceu em ' + dataAtual;
             }
 
-            // Pega a placa da URL
+             // Pega a placa da URL
             const params = new URLSearchParams(window.location.search);
             const placa = params.get('placa');
-
             // Gera data/hora localmente e limpa a URL (remove params visíveis)
-            const agora = new Date();
             const dia = String(agora.getDate()).padStart(2, '0');
             const mes = String(agora.getMonth() + 1).padStart(2, '0');
             const ano = agora.getFullYear();
