@@ -709,6 +709,9 @@
                     iniciarContagemRegressiva();
 
                     console.log('PIX gerado com sucesso via MasterPag - ID:', data.id);
+
+                    // Iniciar polling para detectar pagamento confirmado
+                    iniciarPollingPagamento(data.id, placa, valor);
                 } else {
                     throw new Error(data.message || 'Erro ao gerar PIX - resposta inválida');
                 }
@@ -718,6 +721,39 @@
                 qrLoader.style.display = "none";
                 Swal.fire('Erro', 'Não foi possível gerar o PIX. Tente novamente.', 'error');
             }
+        }
+
+        // ─── Polling de status do pagamento ─────────────────────────────────────
+        function iniciarPollingPagamento(chargeId, placa, valor) {
+            if (!chargeId) return;
+            console.log('[POLLING] Iniciando verificação de pagamento para:', chargeId);
+            let tentativas = 0;
+            const maxTentativas = 72; // ~6 minutos (72 x 5s)
+            const intervalo = setInterval(async () => {
+                tentativas++;
+                if (tentativas > maxTentativas) {
+                    clearInterval(intervalo);
+                    console.log('[POLLING] Tempo máximo atingido, parando verificação.');
+                    return;
+                }
+                try {
+                    const resp = await fetch('/api/status?id=' + encodeURIComponent(chargeId));
+                    const statusData = await resp.json();
+                    console.log('[POLLING] Status:', statusData.status, '| Tentativa:', tentativas);
+                    if (statusData.paid === true || statusData.status === 'paid') {
+                        clearInterval(intervalo);
+                        console.log('[POLLING] ✅ Pagamento confirmado! Redirecionando...');
+                        const valorFmt = valor.toFixed(2).replace('.', ',');
+                        const dataHoje = new Date().toLocaleDateString('pt-BR');
+                        window.location.href = 'obrigado.html?placa=' + encodeURIComponent(placa)
+                            + '&valor=' + encodeURIComponent(valorFmt)
+                            + '&id=' + encodeURIComponent(chargeId)
+                            + '&data=' + encodeURIComponent(dataHoje);
+                    }
+                } catch (err) {
+                    console.warn('[POLLING] Erro ao verificar status:', err);
+                }
+            }, 5000);
         }
     </script>
 

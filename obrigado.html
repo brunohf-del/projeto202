@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pagamento Efetuado — Pedágio Digital</title>
+  <meta name="description" content="Pagamento confirmado com sucesso no Pedágio Digital." />
+  <meta name="robots" content="noindex,nofollow" />
+  <link rel="icon" type="image/png" href="favicon.ico" />
+  <link rel="apple-touch-icon" href="favicon.ico" />
+  <meta name="theme-color" content="#0a0a0a" />
+  <link rel="stylesheet" href="lib/fonts/ubuntu.css">
+  <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css" />
+  <style>
+    * {
+      font-family: 'Ubuntu', sans-serif;
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background: #f0f0f0;
+      min-height: 100vh;
+    }
+
+    /* Appbar */
+    .appbar {
+      background: #fff;
+      border-bottom: 1px solid #e0e0e0;
+      color: #000;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .appbar__inner {
+      display: flex;
+      align-items: center;
+      padding: 14px 20px;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    .back {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      color: #000;
+      text-decoration: none;
+      border-radius: 10px;
+      transition: background 0.2s;
+    }
+    .back:hover { background: rgba(0,0,0,0.06); }
+    .appbar__title {
+      flex: 1;
+      text-align: center;
+      font-size: 17px;
+      font-weight: 600;
+      color: #111;
+    }
+    .appbar__spacer { width: 40px; }
+
+    /* Page */
+    .page {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 40px 20px 80px;
+    }
+
+    /* Success section */
+    .success-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 12px;
+    }
+    .success-icon {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: #d4f53c;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      font-weight: 700;
+      color: #111;
+      box-shadow: 0 0 0 10px rgba(212,245,60,0.2);
+      margin-bottom: 8px;
+    }
+    .success-title {
+      font-size: 26px;
+      font-weight: 800;
+      color: #111;
+    }
+    .success-sub {
+      font-size: 15px;
+      color: #555;
+      margin-bottom: 8px;
+    }
+
+    /* Actions */
+    .success-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+      max-width: 340px;
+      margin: 8px 0 4px;
+    }
+    .btn-ghost {
+      display: block;
+      width: 100%;
+      height: 52px;
+      background: #fff;
+      color: #111;
+      border: 1.5px solid #ccc;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      text-align: center;
+      line-height: 52px;
+      text-decoration: none;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .btn-ghost:hover { background: #f5f5f5; border-color: #aaa; color: #111; }
+
+    .btn-recibo {
+      display: block;
+      width: 100%;
+      height: 52px;
+      background: transparent;
+      color: #555;
+      border: none;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+    .btn-recibo:hover { color: #111; }
+    .btn-recibo:disabled { color: #aaa; cursor: default; text-decoration: none; }
+
+    /* Avaliação */
+    .avaliacao {
+      width: 100%;
+      max-width: 420px;
+      background: #fff;
+      border-radius: 14px;
+      padding: 24px 20px;
+      margin-top: 20px;
+      text-align: left;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    }
+    .avaliacao strong {
+      font-size: 15px;
+      font-weight: 700;
+      color: #111;
+      display: block;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+    .rating {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .estrela {
+      font-size: 28px;
+      color: #ccc;
+      cursor: pointer;
+      transition: color 0.15s, transform 0.1s;
+      user-select: none;
+    }
+    .estrela.ativa, .estrela:hover { color: #f5c518; transform: scale(1.15); }
+
+    label[for="comentario"] {
+      font-size: 14px;
+      color: #555;
+      margin-bottom: 6px;
+      display: block;
+    }
+    textarea#comentario {
+      width: 100%;
+      border: 1.5px solid #ddd;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 14px;
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    textarea#comentario:focus { border-color: #d4f53c; }
+    #contador {
+      font-size: 12px;
+      color: #999;
+      text-align: right;
+      margin-top: 4px;
+      margin-bottom: 16px;
+    }
+    .divider {
+      height: 1px;
+      background: #eee;
+      margin: 16px 0;
+    }
+    .btn-primary2 {
+      display: block;
+      width: 100%;
+      height: 52px;
+      background: #111;
+      color: #d4f53c;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: filter 0.2s, transform 0.15s;
+    }
+    .btn-primary2:hover { filter: brightness(1.15); transform: translateY(-1px); }
+    .btn-primary2:disabled { background: #ccc; color: #fff; cursor: default; transform: none; }
+
+    /* Modal recibo */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+    }
+    .modal.open { display: flex; align-items: flex-end; justify-content: center; }
+    .modal__backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+    }
+    .modal__card {
+      position: relative;
+      background: #fff;
+      border-radius: 20px 20px 0 0;
+      width: 100%;
+      max-width: 600px;
+      max-height: 85vh;
+      overflow-y: auto;
+      padding: 20px 20px 30px;
+      z-index: 1;
+    }
+    .sheet-handle {
+      width: 40px;
+      height: 4px;
+      background: #ddd;
+      border-radius: 2px;
+      margin: 0 auto 16px;
+    }
+    .modal__close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: none;
+      border: none;
+      font-size: 24px;
+      color: #666;
+      cursor: pointer;
+      line-height: 1;
+    }
+    .modal__body h3 {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .modal__body .lead {
+      font-size: 14px;
+      color: #555;
+      margin-bottom: 20px;
+    }
+    .modal__body .section { margin-bottom: 16px; }
+    .modal__body .section strong { font-size: 14px; font-weight: 700; display: block; margin-bottom: 10px; }
+    .grid-rows {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px 12px;
+      font-size: 14px;
+      color: #555;
+    }
+    .row-strong { font-weight: 600; color: #111; text-align: right; }
+    .kv-list { font-size: 13px; color: #555; }
+    .kv-list .kv-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .modal__footer {
+      padding-top: 16px;
+      border-top: 1px solid #eee;
+      margin-top: 16px;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Appbar -->
+  <header class="appbar" aria-label="Barra superior">
+    <div class="appbar__inner">
+      <a class="back" href="index.html" aria-label="Voltar">
+        <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </a>
+      <h1 class="appbar__title">Pagamento</h1>
+      <span class="appbar__spacer"></span>
+    </div>
+  </header>
+
+  <main class="page">
+    <section id="successSection">
+      <div class="success-wrap">
+        <!-- Ícone de sucesso -->
+        <div class="success-icon" aria-hidden="true">✓</div>
+        <h2 class="success-title">Parabéns!</h2>
+        <p class="success-sub">Seu pagamento foi realizado.</p>
+
+        <!-- Botões -->
+        <div class="success-actions">
+          <a id="btnGoHome" class="btn-ghost" href="index.html">Home</a>
+          <button id="btnViewReceipt" class="btn-recibo" type="button">Ver recibo</button>
+        </div>
+
+        <!-- Avaliação -->
+        <div class="avaliacao">
+          <strong>Como você avalia a sua experiência</strong>
+
+          <div class="rating" id="ratingStars">
+            <span class="estrela" data-value="1">★</span>
+            <span class="estrela" data-value="2">★</span>
+            <span class="estrela" data-value="3">★</span>
+            <span class="estrela" data-value="4">★</span>
+            <span class="estrela" data-value="5">★</span>
+          </div>
+
+          <label for="comentario">Comentários:</label>
+          <textarea id="comentario" maxlength="280" rows="4" placeholder="Deixe seu comentário..."></textarea>
+          <div id="contador">0 / 280</div>
+          <div class="divider"></div>
+          <button class="btn-primary2" id="btnEnviarAvaliacao" type="button">
+            Enviar avaliação
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal Recibo -->
+  <div id="receiptModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="rcTitle">
+    <div class="modal__backdrop" data-close="1"></div>
+    <div class="modal__card" role="document">
+      <div class="sheet-handle"></div>
+      <button class="modal__close" id="btnCloseReceipt" data-close="1" aria-label="Fechar">×</button>
+      <div class="modal__body">
+        <h3 id="rcTitle">Recibo</h3>
+        <p class="lead">
+          Seu pagamento de <strong id="rcValor">—</strong> foi realizado com sucesso.
+          Confira os detalhes a seguir.
+        </p>
+        <div class="section">
+          <strong>Dados da transação <span id="rcTransacao"></span></strong>
+          <div class="grid-rows">
+            <span>Data:</span>         <span class="row-strong" id="rcData">—</span>
+            <span>Passagens:</span>    <span class="row-strong" id="rcPassagens">—</span>
+            <span>Multas e juros:</span><span class="row-strong" id="rcMultas">—</span>
+            <span>Total:</span>        <span class="row-strong" id="rcTotal">—</span>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="section">
+          <strong>Passagens</strong>
+          <div id="listaPassagens" class="kv-list" aria-label="Lista de passagens do recibo"></div>
+        </div>
+      </div>
+      <div class="modal__footer">
+        <button class="btn-primary2" id="btnDownload" type="button">Baixar recibo</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="lib/jquery/dist/jquery.min.js"></script>
+  <script>
+    // ─── Carregar dados da URL ───────────────────────────────────────────────
+    const params = new URLSearchParams(window.location.search);
+    const placa   = params.get('placa')  || '';
+    const valor   = params.get('valor')  || '';
+    const chargeId = params.get('id')   || '';
+    const dataStr  = params.get('data') || new Date().toLocaleDateString('pt-BR');
+
+    // Preenche recibo
+    if (valor)    { document.getElementById('rcValor').textContent    = 'R$ ' + valor; }
+    if (chargeId) { document.getElementById('rcTransacao').textContent = '#' + chargeId; }
+    document.getElementById('rcData').textContent       = dataStr;
+    document.getElementById('rcPassagens').textContent  = 'R$ ' + (valor || '0,00');
+    document.getElementById('rcMultas').textContent     = 'R$ 0,00';
+    document.getElementById('rcTotal').textContent      = 'R$ ' + (valor || '0,00');
+
+    if (placa) {
+      const item = document.createElement('div');
+      item.className = 'kv-item';
+      item.innerHTML = '<span>Pedágio — ' + placa + '</span><span>R$ ' + (valor || '0,00') + '</span>';
+      document.getElementById('listaPassagens').appendChild(item);
+    }
+
+    // ─── Estrelas de avaliação ───────────────────────────────────────────────
+    let notaSelecionada = 0;
+    const estrelas = document.querySelectorAll('.estrela');
+    estrelas.forEach(s => {
+      s.addEventListener('mouseenter', () => {
+        const v = +s.dataset.value;
+        estrelas.forEach(e => e.classList.toggle('ativa', +e.dataset.value <= v));
+      });
+      s.addEventListener('mouseleave', () => {
+        estrelas.forEach(e => e.classList.toggle('ativa', +e.dataset.value <= notaSelecionada));
+      });
+      s.addEventListener('click', () => {
+        notaSelecionada = +s.dataset.value;
+        estrelas.forEach(e => e.classList.toggle('ativa', +e.dataset.value <= notaSelecionada));
+      });
+    });
+
+    // ─── Contador de comentário ──────────────────────────────────────────────
+    const comentario = document.getElementById('comentario');
+    const contador   = document.getElementById('contador');
+    comentario.addEventListener('input', () => {
+      contador.textContent = comentario.value.length + ' / 280';
+    });
+
+    // ─── Enviar avaliação ────────────────────────────────────────────────────
+    document.getElementById('btnEnviarAvaliacao').addEventListener('click', function () {
+      if (!notaSelecionada) {
+        alert('Por favor, selecione uma nota antes de enviar.');
+        return;
+      }
+      this.disabled = true;
+      this.textContent = 'Avaliação enviada! Obrigado ✓';
+      this.style.background = '#2e7d32';
+    });
+
+    // ─── Modal recibo ────────────────────────────────────────────────────────
+    const modal = document.getElementById('receiptModal');
+    document.getElementById('btnViewReceipt').addEventListener('click', () => {
+      modal.classList.add('open');
+    });
+    modal.addEventListener('click', e => {
+      if (e.target.dataset.close) modal.classList.remove('open');
+    });
+    document.getElementById('btnCloseReceipt').addEventListener('click', () => {
+      modal.classList.remove('open');
+    });
+
+    // ─── Baixar recibo (impressão) ───────────────────────────────────────────
+    document.getElementById('btnDownload').addEventListener('click', () => {
+      window.print();
+    });
+  </script>
+</body>
+</html>

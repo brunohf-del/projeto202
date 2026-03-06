@@ -1,0 +1,64 @@
+/**
+ * Webhook MasterPag — recebe eventos charge.created e charge.paid
+ * URL configurada no painel: https://projeto202.vercel.app/api/webhook
+ */
+export default async function handler(req, res) {
+  // CORS
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-webhook-signature');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Método não permitido' });
+  }
+
+  try {
+    const event = req.body;
+
+    console.log('[WEBHOOK] Evento recebido:', JSON.stringify(event, null, 2));
+
+    const tipo    = event?.type  || event?.event || '';
+    const charge  = event?.data  || event?.charge || event || {};
+    const chargeId = charge?.id  || charge?.chargeId || '';
+    const status   = charge?.status || '';
+    const amount   = charge?.amount || charge?.value || 0;
+    const externalRef = charge?.externalRef || charge?.external_ref || '';
+
+    // ── charge.paid → pagamento confirmado ──────────────────────────────────
+    if (tipo === 'charge.paid' || status === 'paid') {
+      console.log(`[WEBHOOK] ✅ Pagamento confirmado! ID: ${chargeId} | Ref: ${externalRef} | Valor: R$ ${(amount / 100).toFixed(2)}`);
+
+      // Aqui você pode:
+      // - Salvar em banco de dados
+      // - Enviar e-mail de confirmação
+      // - Marcar débito como pago
+      // Por ora, apenas logamos e respondemos 200
+
+      return res.status(200).json({
+        received: true,
+        event: tipo,
+        chargeId,
+        status: 'paid',
+        message: 'Pagamento processado com sucesso'
+      });
+    }
+
+    // ── charge.created → cobrança criada ────────────────────────────────────
+    if (tipo === 'charge.created') {
+      console.log(`[WEBHOOK] 📋 Cobrança criada. ID: ${chargeId} | Ref: ${externalRef}`);
+      return res.status(200).json({ received: true, event: tipo, chargeId });
+    }
+
+    // ── outros eventos ───────────────────────────────────────────────────────
+    console.log(`[WEBHOOK] Evento ignorado: ${tipo}`);
+    return res.status(200).json({ received: true, event: tipo, ignored: true });
+
+  } catch (error) {
+    console.error('[WEBHOOK] Erro ao processar evento:', error);
+    return res.status(500).json({ error: 'Erro interno ao processar webhook' });
+  }
+}
