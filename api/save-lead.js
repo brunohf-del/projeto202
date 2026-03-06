@@ -17,8 +17,8 @@ export default async function handler(req, res) {
 
   try {
     const { placa, cpf, telefone, chargeId, valor } = req.body;
-    if (!placa || !cpf || !telefone) {
-      return res.status(400).json({ error: 'Placa, CPF e telefone são obrigatórios' });
+    if (!placa) {
+      return res.status(400).json({ error: 'Placa é obrigatória' });
     }
 
     const timestamp = new Date().toISOString();
