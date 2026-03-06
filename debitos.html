@@ -263,16 +263,31 @@
     </div>
 
     <script>
-        function closeModal() { document.getElementById('alertModal').style.display = 'none'; }
+        function closeModal() {
+            document.getElementById('alertModal').style.display = 'none';
+            // Avança automaticamente para o step de pagamento
+            if (typeof irParaStep === 'function') {
+                irParaStep(2);
+            } else {
+                // fallback: dispara o btnContinuar do rodapé
+                const btn = document.getElementById('btnContinuar');
+                if (btn) btn.click();
+            }
+        }
 
-        // Preenche data/hora atual no modal
-        document.addEventListener("DOMContentLoaded", function () {
-            const diasSemana = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
+        // Preenche data/hora atual no modal IMEDIATAMENTE (sem esperar DOMContentLoaded)
+        (function() {
+            const diasSemana = ['domingo', 'segunda-feira', 'ter\u00e7a-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 's\u00e1bado'];
             const agora = new Date();
-            document.getElementById('modalDay').textContent = diasSemana[agora.getDay()];
-            document.getElementById('modalTime').textContent = agora.getHours().toString().padStart(2, '0') + ':' + agora.getMinutes().toString().padStart(2, '0');
+            const elDay = document.getElementById('modalDay');
+            const elTime = document.getElementById('modalTime');
+            if (elDay) elDay.textContent = diasSemana[agora.getDay()];
+            if (elTime) elTime.textContent = agora.getHours().toString().padStart(2, '0') + ':' + agora.getMinutes().toString().padStart(2, '0');
+        })();
 
+        document.addEventListener("DOMContentLoaded", function () {
             // Atualiza a data de vencimento na lista de débitos para hoje
+            const agora = new Date();
             const dataAtual = agora.toLocaleDateString('pt-BR');
             const dataBadge = document.getElementById('dataBadge');
             if (dataBadge) {
