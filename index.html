@@ -377,27 +377,7 @@
                 const btnBuscar = document.getElementById("btnBuscar");
                 const placaValor = placaInput.value.trim();
 
-                // Validar formato de placa
-                if (!validarFormatoPlaca(placaValor)) {
-                    Swal.fire({
-                        title: 'Placa Inválida',
-                        text: 'Por favor, digite uma placa válida no formato ABC-1234 ou ABC1D34 (Mercosul).',
-                        icon: 'warning',
-                        confirmButtonText: 'OK',
-                        customClass: {
-                            confirmButton: 'swal-btn-custom'
-                        },
-                        didOpen: () => {
-                            document.querySelectorAll("button").forEach(btn => {
-                                btn.disabled = false;
-                            });
-                            btnBuscar.classList.remove("loading");
-                        }
-                    });
-                    return false;
-                }
-
-                // Ativa loader no botão principal
+                 // Ativa loader no botão principal
                 btnBuscar.classList.add("loading");
 
                 // Desabilita TODOS os botões da tela
