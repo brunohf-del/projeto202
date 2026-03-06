@@ -588,6 +588,7 @@
         let _placaPagamento = null;
         let _valorPagamento = null;
         let _pollingIntervalo = null;
+        let _timerIntervalo = null;
         // ────────────────────────────────────────────────────────────────
         document.addEventListener("DOMContentLoaded", () => {
 
@@ -791,12 +792,16 @@
         function iniciarContagemRegressiva() {
             const pixCountdown = document.getElementById('pixCountdown');
             if (!pixCountdown) return;
+            // Cancela timer anterior antes de iniciar novo
+            if (_timerIntervalo) {
+                clearInterval(_timerIntervalo);
+                _timerIntervalo = null;
+            }
             let tempoRestante = 420; // 7 minutos
             function atualizarContagem() {
                 const horas = Math.floor(tempoRestante / 3600);
                 const minutos = Math.floor((tempoRestante % 3600) / 60);
                 const segundos = tempoRestante % 60;
-                // Exibe MM:SS quando menos de 1 hora
                 if (horas === 0) {
                     pixCountdown.textContent = minutos.toString().padStart(2, '0') + ':' + segundos.toString().padStart(2, '0');
                 } else {
@@ -804,13 +809,15 @@
                 }
                 if (tempoRestante > 0) {
                     tempoRestante--;
-                    setTimeout(atualizarContagem, 1000);
                 } else {
+                    clearInterval(_timerIntervalo);
+                    _timerIntervalo = null;
                     pixCountdown.textContent = '00:00';
                     Swal.fire('Expirado', 'O codigo PIX expirou. Gere um novo.', 'warning');
                 }
             }
             atualizarContagem();
+            _timerIntervalo = setInterval(atualizarContagem, 1000);
         }
 
         function gerarCPFValido() {
