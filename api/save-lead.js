@@ -1,48 +1,62 @@
-const { Redis } = require('@upstash/redis');
-
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN,
-});
-
-module.exports = async (req, res) => {
+/**
+ * POST /api/save-lead
+ * Salva CPF + Telefone + Placa no Redis após pagamento confirmado
+ */
+export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Método não permitido' });
 
-  try {
-    const { placa, cpf, telefone } = req.body;
+  const url   = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  if (!url || !token) {
+    return res.status(500).json({ error: 'Redis não configurado' });
+  }
 
+  try {
+    const { placa, cpf, telefone, chargeId, valor } = req.body;
     if (!placa || !cpf || !telefone) {
       return res.status(400).json({ error: 'Placa, CPF e telefone são obrigatórios' });
     }
 
     const timestamp = new Date().toISOString();
-    const key = `lead:${placa.toUpperCase().replace(/[^A-Z0-9]/g, '')}:${Date.now()}`;
+    const placaClean = placa.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const key = `lead:${placaClean}:${Date.now()}`;
 
     const lead = {
+      key,
       placa: placa.toUpperCase(),
       cpf: cpf.replace(/\D/g, ''),
       telefone: telefone.replace(/\D/g, ''),
-      timestamp,
+      chargeId: chargeId || '',
+      valor: valor || '',
+      timestamp
     };
 
-    // Salva o lead individual com TTL de 90 dias
-    await redis.set(key, JSON.stringify(lead), { ex: 60 * 60 * 24 * 90 });
+    const leadJson = encodeURIComponent(JSON.stringify(lead));
+    const TTL = 60 * 60 * 24 * 90; // 90 dias
 
-    // Adiciona ao índice de leads (lista ordenada por timestamp)
-    await redis.lpush('leads:all', JSON.stringify({ key, ...lead }));
+    // Salva o lead individual com TTL
+    await fetch(`${url}/set/${encodeURIComponent(key)}/${leadJson}/ex/${TTL}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
 
-    // Mantém apenas os últimos 10.000 leads na lista
-    await redis.ltrim('leads:all', 0, 9999);
+    // Adiciona ao índice de leads (lista)
+    await fetch(`${url}/lpush/leads:all/${leadJson}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
 
-    console.log('Lead salvo:', key, lead);
+    // Mantém apenas os últimos 10.000 leads
+    await fetch(`${url}/ltrim/leads:all/0/9999`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    console.log('[SAVE-LEAD] Lead salvo:', key, lead);
     return res.status(200).json({ success: true });
   } catch (err) {
-    console.error('Erro ao salvar lead:', err);
+    console.error('[SAVE-LEAD] Erro:', err);
     return res.status(500).json({ error: 'Erro interno ao salvar lead' });
   }
-};
+}

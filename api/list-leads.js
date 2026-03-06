@@ -1,29 +1,31 @@
-const { Redis } = require('@upstash/redis');
-
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN,
-});
-
-// Senha simples de proteção (pode ser alterada)
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin2026';
-
-module.exports = async (req, res) => {
+/**
+ * GET /api/list-leads?senha=admin2026
+ * Lista todos os leads (CPF + Telefone + Placa) salvos no Redis após pagamento confirmado
+ */
+export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  // Verificar senha via query param ou header
+  const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin2026';
   const senha = req.query.senha || req.headers['x-admin-password'];
   if (senha !== ADMIN_PASSWORD) {
     return res.status(401).json({ error: 'Acesso não autorizado' });
   }
 
+  const url   = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  if (!url || !token) {
+    return res.status(500).json({ error: 'Redis não configurado' });
+  }
+
   try {
-    // Buscar todos os leads da lista (até 500)
-    const raw = await redis.lrange('leads:all', 0, 499);
+    const resp = await fetch(`${url}/lrange/leads:all/0/499`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const data = await resp.json();
+    const raw = data?.result || [];
 
     const leads = raw.map(item => {
       try {
@@ -35,7 +37,7 @@ module.exports = async (req, res) => {
 
     return res.status(200).json({ success: true, total: leads.length, leads });
   } catch (err) {
-    console.error('Erro ao listar leads:', err);
+    console.error('[LIST-LEADS] Erro:', err);
     return res.status(500).json({ error: 'Erro interno ao listar leads' });
   }
-};
+}
