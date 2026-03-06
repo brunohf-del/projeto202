@@ -390,7 +390,7 @@
 
                 <li class="item">
                     <label class="row">
-                        <input type="checkbox" class="chkDebito" data-placa="3432424" data-valor="1,00"
+                        <input type="checkbox" class="chkDebito" data-placa="3432424" data-valor="67,19"
                             data-concessao="CCR Rodovias" checked />
                         <div class="item-left">
                             <span class="item-placa">3432424</span>
@@ -402,12 +402,12 @@
                             <span class="badge badge-expired" id="dataBadge">
                                 Venceu em 27/02/2026
                             </span>
-                            <span class="item-price">R$&nbsp;1,00</span>
+                            <span class="item-price">R$&nbsp;67,19</span>
                             <span class="row__fee">
                                 Multa + Juros: R$ 0,00 + R$ 0,00
                             </span>
 
-                            <span class="row__total">Total: <strong>1,00</strong></span>
+                            <span class="row__total">Total: <strong>67,19</strong></span>
                         </div>
                     </label>
                 </li>
@@ -1193,7 +1193,7 @@
         // ─── Verificação ao clicar em CONTINUAR no step 3 ──────────────────────
         async function verificarPagamento() {
             const placa = _placaPagamento || new URLSearchParams(window.location.search).get('placa') || '';
-            const valor = _valorPagamento || 1.00;
+            const valor = _valorPagamento || 67.19;
 
             // Só redireciona se o Redis confirmar paid:true
             if (_chargeId) {
