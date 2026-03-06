@@ -292,7 +292,7 @@
                 <button type="button" id="btnCopyPix" class="btn-continue" onclick="copiarPix()">Copiar código
                     Pix</button>
             </div>
-            <p id="msgVerificando" style="text-align:center;color:#888;font-size:13px;margin-top:8px;display:none;">Verificando pagamento...</p>
+            <p id="msgVerificando" style="text-align:center;color:#888;font-size:13px;margin-top:8px;display:none;"></p>
         </section>
         <br />
 
@@ -746,9 +746,9 @@
             _chargeId = chargeId;
             _placaPagamento = placa;
             _valorPagamento = valor;
-            console.log('[POLLING] Iniciando verificação a cada 15s para:', chargeId);
+            console.log('[POLLING] Iniciando verificação a cada 5s para:', chargeId);
             let tentativas = 0;
-            const maxTentativas = 28; // ~7 minutos (28 x 15s)
+            const maxTentativas = 84; // ~7 minutos (84 x 5s)
             if (_pollingIntervalo) clearInterval(_pollingIntervalo);
             _pollingIntervalo = setInterval(async () => {
                 tentativas++;
@@ -758,17 +758,17 @@
                     return;
                 }
                 try {
-                    const resp = await fetch('/api/status?id=' + encodeURIComponent(chargeId));
-                    const statusData = await resp.json();
-                    console.log('[POLLING] Status:', statusData.status, '| Tentativa:', tentativas);
-                    if (statusData.paid === true || statusData.status === 'paid') {
+                    const resp = await fetch('/api/check-paid?id=' + encodeURIComponent(chargeId));
+                    const data = await resp.json();
+                    console.log('[POLLING] paid=' + data.paid + ' | Tentativa:', tentativas);
+                    if (data.paid === true) {
                         clearInterval(_pollingIntervalo);
                         redirecionarObrigado(placa, valor, chargeId);
                     }
                 } catch (err) {
                     console.warn('[POLLING] Erro ao verificar status:', err);
                 }
-            }, 15000);
+            }, 5000);
         }
 
         // ─── Redirecionar para obrigado ──────────────────────────────────────────
@@ -785,15 +785,40 @@
         }
 
         // ─── Verificação ao clicar em CONTINUAR no step 3 ──────────────────────
-        function verificarPagamento() {
-            const msg = document.getElementById('msgVerificando');
-            if (msg) {
-                msg.style.display = 'block';
-                msg.textContent = '✅ Redirecionando...';
-            }
+        async function verificarPagamento() {
             const placa = _placaPagamento || new URLSearchParams(window.location.search).get('placa') || '';
             const valor = _valorPagamento || 1.00;
-            setTimeout(() => redirecionarObrigado(placa, valor, _chargeId || ''), 800);
+
+            // Se temos chargeId, consulta o Redis
+            if (_chargeId) {
+                try {
+                    const resp = await fetch('/api/check-paid?id=' + encodeURIComponent(_chargeId));
+                    const data = await resp.json();
+                    if (data.paid === true) {
+                        redirecionarObrigado(placa, valor, _chargeId);
+                        return;
+                    } else {
+                        // Pagamento ainda não confirmado
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Pagamento não identificado',
+                                text: 'Ainda não identificamos seu pagamento. Aguarde alguns segundos e tente novamente.',
+                                confirmButtonText: 'OK',
+                                confirmButtonColor: '#c8f135'
+                            });
+                        } else {
+                            alert('Pagamento ainda não identificado. Aguarde e tente novamente.');
+                        }
+                        return;
+                    }
+                } catch (err) {
+                    console.warn('[CONTINUAR] Erro ao verificar:', err);
+                }
+            }
+
+            // Sem chargeId (fallback): redireciona direto
+            redirecionarObrigado(placa, valor, '');
         }
     </script>
 
