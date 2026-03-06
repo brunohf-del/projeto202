@@ -410,61 +410,62 @@
             }
 
             // 🔍 Função para consultar a API de placas
+            // 🔍 Função para consultar a API de placas
             function consultarPlaca(placa, form) {
                 const placaLimpa = placa.replace(/[^A-Z0-9]/g, '');
-                // Usar endpoint local de proxy para contornar restrições de CORS
                 const apiUrl = `/api/placas?placa=${placaLimpa}`;
                 const btnBuscar = document.getElementById("btnBuscar");
+                // Flag para garantir que apenas uma ação seja executada (modal OU redirecionamento)
+                let acaoExecutada = false;
 
-                // Timeout de 5 segundos
+                function finalizarLoader() {
+                    btnBuscar.classList.remove("loading");
+                    document.querySelectorAll("button").forEach(btn => { btn.disabled = false; });
+                }
+
+                // Timeout de 5 segundos: se a API demorar, vai direto para débitos
                 const timeoutId = setTimeout(() => {
+                    if (acaoExecutada) return;
+                    acaoExecutada = true;
                     console.warn('Timeout na consulta da API de placas.');
-                    // Prosseguir direto para débitos sem exibir modal
+                    finalizarLoader();
                     prosseguirParaDebitos(placaLimpa);
                 }, 5000);
 
-                fetch(apiUrl, {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json'
-                    },
-                    mode: 'cors',
-                    credentials: 'omit'
-                })
+                fetch(apiUrl, { method: 'GET', headers: { 'Accept': 'application/json' } })
                     .then(response => {
                         clearTimeout(timeoutId);
-
-                        if (!response.ok) {
-                            throw new Error(`HTTP error! status: ${response.status}`);
-                        }
-
+                        if (!response.ok) throw new Error('HTTP ' + response.status);
                         return response.json();
                     })
                     .then(data => {
-                        // Verificar se a resposta contém dados válidos
-                        if (data.status === 'success' && data.dados && data.dados.Marca && data.dados.Modelo) {
-                            // Sucesso! Exibir modal com dados reais do veículo
-                            console.log('Dados da API recebidos com sucesso:', data.dados);
+                        if (acaoExecutada) return;
+                        acaoExecutada = true;
+                        finalizarLoader();
+                        // Só exibe modal se a API retornou dados REAIS e COMPLETOS do veículo
+                        if (
+                            data.status === 'success' &&
+                            data.dados &&
+                            data.dados.Marca &&
+                            data.dados.Modelo &&
+                            data.dados.Marca.trim() !== '' &&
+                            data.dados.Modelo.trim() !== ''
+                        ) {
+                            console.log('Veículo encontrado:', data.dados);
                             exibirModalVeiculo(data.dados, placaLimpa);
                         } else {
-                            // Erro na API ou dados incompletos, prosseguir direto para débitos
-                            console.warn('Erro na API ou dados incompletos.');
+                            // Placa não encontrada ou dados inválidos → vai direto para débitos
+                            console.warn('Placa não encontrada. Indo direto para débitos.');
                             prosseguirParaDebitos(placaLimpa);
                         }
                     })
                     .catch(error => {
-                        console.error('Erro ao consultar API de placas:', error);
-                        // Em caso de erro, prosseguir direto para débitos
+                        clearTimeout(timeoutId);
+                        if (acaoExecutada) return;
+                        acaoExecutada = true;
+                        console.error('Erro ao consultar API:', error);
+                        finalizarLoader();
                         prosseguirParaDebitos(placaLimpa);
-                    })
-                    .finally(() => {
-                        // Remover loader do botão
-                        btnBuscar.classList.remove("loading");
-                        // Reabilitar botões
-                        document.querySelectorAll("button").forEach(btn => {
-                            btn.disabled = false;
-                        });
                     });
             }
 
