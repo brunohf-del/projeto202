@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Painel</title>
+    <meta name="robots" content="noindex,nofollow" />
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #0f0f0f;
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+
+        /* ── Tela de login ── */
+        #loginScreen {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .login-card {
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 16px;
+            padding: 40px 32px;
+            width: 100%;
+            max-width: 380px;
+            text-align: center;
+        }
+        .login-card h1 {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #fff;
+        }
+        .login-card p {
+            font-size: 13px;
+            color: #888;
+            margin-bottom: 28px;
+        }
+        .login-input {
+            width: 100%;
+            padding: 14px 16px;
+            background: #111;
+            border: 1.5px solid #333;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 15px;
+            outline: none;
+            margin-bottom: 14px;
+            transition: border-color 0.2s;
+        }
+        .login-input:focus { border-color: #e5ff51; }
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background: #e5ff51;
+            color: #000;
+            border: 0;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .login-btn:hover { opacity: 0.88; }
+        .login-error {
+            font-size: 13px;
+            color: #ff5555;
+            margin-top: 10px;
+            display: none;
+        }
+
+        /* ── Painel principal ── */
+        #painelScreen { display: none; padding: 24px; }
+        .painel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .painel-header h1 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+        }
+        .painel-header span {
+            font-size: 13px;
+            color: #888;
+        }
+        .badge-total {
+            background: #e5ff51;
+            color: #000;
+            font-weight: 700;
+            font-size: 13px;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+        .btn-refresh {
+            background: #222;
+            color: #e5ff51;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-refresh:hover { background: #2a2a2a; }
+        .btn-logout {
+            background: transparent;
+            color: #888;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 8px 14px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .btn-logout:hover { color: #fff; }
+
+        /* Filtro */
+        .filter-bar {
+            margin-bottom: 16px;
+        }
+        .filter-input {
+            width: 100%;
+            max-width: 360px;
+            padding: 10px 14px;
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+        }
+        .filter-input:focus { border-color: #e5ff51; }
+
+        /* Tabela */
+        .table-wrap {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid #2a2a2a;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        thead tr {
+            background: #1a1a1a;
+        }
+        thead th {
+            padding: 14px 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #aaa;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #2a2a2a;
+            white-space: nowrap;
+        }
+        tbody tr {
+            border-bottom: 1px solid #1e1e1e;
+            transition: background 0.15s;
+        }
+        tbody tr:hover { background: #1a1a1a; }
+        tbody tr:last-child { border-bottom: none; }
+        tbody td {
+            padding: 13px 16px;
+            color: #ddd;
+            white-space: nowrap;
+        }
+        .td-placa {
+            font-weight: 700;
+            color: #e5ff51;
+            letter-spacing: 1px;
+        }
+        .td-valor {
+            font-weight: 600;
+            color: #4ade80;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #555;
+        }
+        .empty-state p { font-size: 15px; }
+
+        /* Loading */
+        .loading-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #555;
+        }
+        .spinner {
+            width: 32px; height: 32px;
+            border: 3px solid #333;
+            border-top-color: #e5ff51;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media (max-width: 600px) {
+            #painelScreen { padding: 16px; }
+            .painel-header h1 { font-size: 17px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Tela de Login -->
+<div id="loginScreen">
+    <div class="login-card">
+        <h1>🔐 Acesso Restrito</h1>
+        <p>Digite a senha para acessar o painel de leads.</p>
+        <input class="login-input" id="senhaInput" type="password" placeholder="Senha" autocomplete="off" />
+        <button class="login-btn" id="btnEntrar" onclick="entrar()">Entrar</button>
+        <div class="login-error" id="loginError">Senha incorreta. Tente novamente.</div>
+    </div>
+</div>
+
+<!-- Painel Principal -->
+<div id="painelScreen">
+    <div class="painel-header">
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+            <h1>Leads — Pagamentos Confirmados</h1>
+            <span class="badge-total" id="badgeTotal">0 leads</span>
+        </div>
+        <div style="display:flex;gap:8px;">
+            <button class="btn-refresh" onclick="carregarLeads()">↻ Atualizar</button>
+            <button class="btn-logout" onclick="sair()">Sair</button>
+        </div>
+    </div>
+
+    <div class="filter-bar">
+        <input class="filter-input" id="filtroInput" type="text" placeholder="Filtrar por placa, CPF ou telefone..." oninput="filtrar()" />
+    </div>
+
+    <div class="table-wrap">
+        <div class="loading-state" id="loadingState">
+            <div class="spinner"></div>
+            <p>Carregando leads...</p>
+        </div>
+        <table id="tabelaLeads" style="display:none;">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Placa</th>
+                    <th>CPF</th>
+                    <th>Telefone</th>
+                    <th>Valor</th>
+                    <th>Data / Hora</th>
+                    <th>Charge ID</th>
+                </tr>
+            </thead>
+            <tbody id="tbodyLeads"></tbody>
+        </table>
+        <div class="empty-state" id="emptyState" style="display:none;">
+            <p>Nenhum lead encontrado.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    const SENHA_LOCAL = 'admin2026';
+    let todosLeads = [];
+
+    // Verificar se já está logado (sessionStorage)
+    if (sessionStorage.getItem('adminLogado') === '1') {
+        mostrarPainel();
+    }
+
+    // Enter no campo de senha
+    document.getElementById('senhaInput').addEventListener('keydown', e => {
+        if (e.key === 'Enter') entrar();
+    });
+
+    function entrar() {
+        const senha = document.getElementById('senhaInput').value.trim();
+        if (senha === SENHA_LOCAL) {
+            sessionStorage.setItem('adminLogado', '1');
+            mostrarPainel();
+        } else {
+            document.getElementById('loginError').style.display = 'block';
+            document.getElementById('senhaInput').value = '';
+            document.getElementById('senhaInput').focus();
+        }
+    }
+
+    function sair() {
+        sessionStorage.removeItem('adminLogado');
+        location.reload();
+    }
+
+    function mostrarPainel() {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('painelScreen').style.display = 'block';
+        carregarLeads();
+    }
+
+    async function carregarLeads() {
+        document.getElementById('loadingState').style.display = 'block';
+        document.getElementById('tabelaLeads').style.display = 'none';
+        document.getElementById('emptyState').style.display = 'none';
+
+        try {
+            const resp = await fetch('/api/list-leads?senha=' + SENHA_LOCAL);
+            const data = await resp.json();
+            todosLeads = data.leads || [];
+            renderizarTabela(todosLeads);
+        } catch (err) {
+            console.error('Erro ao carregar leads:', err);
+            document.getElementById('loadingState').innerHTML = '<p style="color:#ff5555">Erro ao carregar dados. Tente novamente.</p>';
+        }
+    }
+
+    function filtrar() {
+        const q = document.getElementById('filtroInput').value.toLowerCase();
+        if (!q) {
+            renderizarTabela(todosLeads);
+            return;
+        }
+        const filtrados = todosLeads.filter(l =>
+            (l.placa || '').toLowerCase().includes(q) ||
+            (l.cpf || '').includes(q) ||
+            (l.telefone || '').includes(q)
+        );
+        renderizarTabela(filtrados);
+    }
+
+    function formatarCPF(cpf) {
+        const n = (cpf || '').replace(/\D/g, '');
+        if (n.length !== 11) return cpf;
+        return n.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+    }
+
+    function formatarTel(tel) {
+        const n = (tel || '').replace(/\D/g, '');
+        if (n.length === 11) return n.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+        if (n.length === 10) return n.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+        return tel;
+    }
+
+    function formatarData(iso) {
+        if (!iso) return '—';
+        const d = new Date(iso);
+        return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function formatarValor(v) {
+        if (!v && v !== 0) return '—';
+        const n = parseFloat(v);
+        if (isNaN(n)) return v;
+        return 'R$ ' + n.toFixed(2).replace('.', ',');
+    }
+
+    function renderizarTabela(leads) {
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('badgeTotal').textContent = leads.length + (leads.length === 1 ? ' lead' : ' leads');
+
+        if (!leads.length) {
+            document.getElementById('tabelaLeads').style.display = 'none';
+            document.getElementById('emptyState').style.display = 'block';
+            return;
+        }
+
+        const tbody = document.getElementById('tbodyLeads');
+        tbody.innerHTML = '';
+
+        leads.forEach((lead, i) => {
+            const tr = document.createElement('tr');
+            const chargeShort = lead.chargeId ? lead.chargeId.substring(0, 8) + '...' : '—';
+            tr.innerHTML = `
+                <td style="color:#555;">${i + 1}</td>
+                <td class="td-placa">${lead.placa || '—'}</td>
+                <td>${formatarCPF(lead.cpf)}</td>
+                <td>${formatarTel(lead.telefone)}</td>
+                <td class="td-valor">${formatarValor(lead.valor)}</td>
+                <td>${formatarData(lead.timestamp)}</td>
+                <td style="color:#555;font-size:12px;" title="${lead.chargeId || ''}">${chargeShort}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        document.getElementById('tabelaLeads').style.display = 'table';
+        document.getElementById('emptyState').style.display = 'none';
+    }
+</script>
+</body>
+</html>
