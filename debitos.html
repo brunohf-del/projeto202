@@ -316,9 +316,13 @@
             
             if (placa) {
                 const placaUpper = placa.toUpperCase();
-                document.getElementById('modalVehicleName').textContent = '(' + placaUpper + ')';
-                document.getElementById('qPlaca').value = placaUpper;
-                document.getElementById('Placa').value = placaUpper;
+                // Formata a placa com hífen: AAD-F1FG ou ABC-1234
+                const placaFormatada = placaUpper.length >= 4
+                    ? placaUpper.slice(0, 3) + '-' + placaUpper.slice(3)
+                    : placaUpper;
+                document.getElementById('modalVehicleName').textContent = '(' + placaFormatada + ')';
+                document.getElementById('qPlaca').value = placaFormatada;
+                document.getElementById('Placa').value = placaUpper; // mantém sem hífen para uso interno
                 document.getElementById('Cliente').value = placaUpper;
                 document.getElementById('resumoPlaca').textContent = placaUpper;
                 document.getElementById('pixPlate').textContent = placaUpper;
