@@ -238,26 +238,26 @@
                     </svg>
                     ATENÇÃO
                 </div>
-                <h3 class="modal-subtitle">Débitos em aberto encontrados <span id="modalVehicleName">(3432424)</span>
-                </h3>
-                <p class="modal-main-text">
-                    <span class="red-text">Hoje, <span id="modalDay">segunda-feira</span> às <span
-                            id="modalTime">12:01</span></span> - Caso não realize o pagamento, a multa será
-                    automaticamente encaminhada ao DETRAN. Após esse prazo de 15 minutos, o sistema emitirá
-                    automaticamente a multa de <span class="red-text">R$ 195,23</span> e <span class="red-text">5 pontos
-                        na CNH</span>.
+                <p class="modal-main-text" style="text-align:left; margin-bottom:14px;">
+                    A partir de <span class="red-text" id="modalDataAmanha">07/03/2026</span> será encaminhada ao DETRAN a infração relacionada ao veículo:
                 </p>
-                <div class="ctb-box">
-                    <h4>Art. 209-A - CTB:</h4>
-                    <p>Conforme o Art. 209-A do CTB: "Efetuar o pagamento de pedágio eletrônico fora do prazo
-                        estabelecido pelo órgão..."</p>
-                    <div class="ctb-details">
-                        <p>Infração: <span class="red-text">Grave.</span></p>
-                        <p>Penalidade: <span class="red-text">Multa de R$ 195,23.</span></p>
-                        <p>Pontuação: <span class="red-text">5 pontos na CNH.</span></p>
-                    </div>
+                <!-- Caixa azul: Valor do Débito -->
+                <div style="background:#EBF5FB; border:1.5px solid #2980B9; border-radius:10px; padding:12px 16px; display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+                    <span style="color:#1A5276; font-weight:600; font-size:14px;">Valor do Débito:</span>
+                    <span style="color:#1A5276; font-weight:700; font-size:16px;" id="modalValorDebito">R$ 1,00</span>
                 </div>
-                <button class="modal-continue-btn" onclick="closeModal()">CONTINUAR</button>
+                <!-- Caixa vermelha: Art. 209-A -->
+                <div style="background:#FDEDEC; border-left:4px solid #E74C3C; border-radius:6px; padding:12px 14px; margin-bottom:14px;">
+                    <p style="color:#922B21; font-size:14px; font-weight:700; margin:0 0 6px 0;">Art. 209-A - CTB:</p>
+                    <p style="color:#555; font-size:13px; margin:0; line-height:1.5;">Evadir-se da cobrança pelo uso de rodovias e vias urbanas para não efetuar o seu pagamento, ou deixar de efetuá-lo na forma estabelecida.</p>
+                </div>
+                <p style="font-size:13px; margin-bottom:6px;">Multa: <span class="red-text">R$ 195,23</span> e <span class="red-text">5 pontos na CNH.</span></p>
+                <p style="color:#D32F2F; font-size:13px; font-weight:600; margin-bottom:20px;">Realize o pagamento agora e evite a autuação.</p>
+                <!-- Botões -->
+                <div style="display:flex; gap:10px;">
+                    <button class="modal-cancel-btn" onclick="closeModal()">Cancelar</button>
+                    <button class="modal-continue-btn" onclick="closeModal()">Entendi</button>
+                </div>
             </div>
         </div>
     </div>
@@ -277,12 +277,15 @@
 
         // Preenche data/hora atual no modal IMEDIATAMENTE (sem esperar DOMContentLoaded)
         (function() {
-            const diasSemana = ['domingo', 'segunda-feira', 'ter\u00e7a-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 's\u00e1bado'];
             const agora = new Date();
-            const elDay = document.getElementById('modalDay');
-            const elTime = document.getElementById('modalTime');
-            if (elDay) elDay.textContent = diasSemana[agora.getDay()];
-            if (elTime) elTime.textContent = agora.getHours().toString().padStart(2, '0') + ':' + agora.getMinutes().toString().padStart(2, '0');
+            // Data de amanhã em vermelho
+            const amanha = new Date(agora);
+            amanha.setDate(amanha.getDate() + 1);
+            const dd = String(amanha.getDate()).padStart(2, '0');
+            const mm = String(amanha.getMonth() + 1).padStart(2, '0');
+            const yyyy = amanha.getFullYear();
+            const elAmanha = document.getElementById('modalDataAmanha');
+            if (elAmanha) elAmanha.textContent = dd + '/' + mm + '/' + yyyy;
         })();
 
         document.addEventListener("DOMContentLoaded", function () {

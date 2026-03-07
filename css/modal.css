@@ -102,14 +102,13 @@
 }
 
 .modal-continue-btn {
-    display: block;
-    width: 100%;
-    height: 56px;
+    flex: 1.5;
+    height: 48px;
     background: #000;
     color: #e5ff51;
     border: none;
     border-radius: 12px;
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 600;
     cursor: pointer;
     transition: filter 0.2s, transform 0.15s;
@@ -118,6 +117,23 @@
 .modal-continue-btn:hover {
     filter: brightness(1.1);
     transform: translateY(-1px);
+}
+
+.modal-cancel-btn {
+    flex: 1;
+    height: 48px;
+    background: #f0f0f0;
+    color: #333;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: filter 0.2s;
+}
+
+.modal-cancel-btn:hover {
+    filter: brightness(0.95);
 }
 
 /* Popup notification */
