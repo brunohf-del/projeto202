@@ -1242,7 +1242,7 @@
         // ─── Verificação ao clicar em CONTINUAR no step 3 ──────────────────────
         async function verificarPagamento() {
             const placa = _placaPagamento || new URLSearchParams(window.location.search).get('placa') || '';
-            const valor = _valorPagamento || 67.19;
+            const valor = _valorPagamento || 1.19;
 
             // Só redireciona se o Redis confirmar paid:true
             if (_chargeId) {
